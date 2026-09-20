@@ -19,6 +19,29 @@
     --rust-bg:#F7E7DF;
     --ok-bg:#E4F0E6;
     --ok:#3E7A52;
+    --input-bg:#FFFFFF;
+    --row-line:#E4EAE8;
+    --row-hover:#F7FAF9;
+    --code-bg:#F0F0EC;
+    --login-card-bg:#FFFFFF;
+  }
+  :root[data-theme="dark"]{
+    --paper:#11191A;
+    --card:#1B2524;
+    --ink:#E7EFEE;
+    --ink-soft:#93A6A4;
+    --line:#2C3937;
+    --teal:#5FA6A6;
+    --teal-dark:#0E2325;
+    --rust:#E0916C;
+    --rust-bg:#3A2A20;
+    --ok-bg:#1E3327;
+    --ok:#83C79A;
+    --input-bg:#20302D;
+    --row-line:#28322F;
+    --row-hover:#22302C;
+    --code-bg:#25302D;
+    --login-card-bg:#1B2524;
   }
   *{box-sizing:border-box;}
   body{
@@ -65,7 +88,7 @@
   form.inline-add label{font-size:11.5px; color:var(--ink-soft); text-transform:none;}
   input,select{
     border:1px solid var(--line); padding:7px 9px; font-size:13.5px;
-    font-family:inherit; background:#fff; color:var(--ink);
+    font-family:inherit; background:var(--input-bg); color:var(--ink);
   }
   input:focus,select:focus{outline:2px solid var(--teal); outline-offset:0; border-color:var(--teal);}
   button.primary{
@@ -78,15 +101,15 @@
 
   table{width:100%; border-collapse:collapse; margin-top:14px; font-size:13.5px;}
   th{text-align:left; font-weight:500; color:var(--ink-soft); font-size:12px; padding:8px 10px; border-bottom:1px solid var(--line);}
-  td{padding:8px 10px; border-bottom:1px solid #E4EAE8;}
-  tr:hover td{background:#F7FAF9;}
+  td{padding:8px 10px; border-bottom:1px solid var(--row-line);}
+  tr:hover td{background:var(--row-hover);}
   .badge{padding:2px 8px; font-size:11.5px; display:inline-block;}
   .badge.low{background:var(--rust-bg); color:var(--rust);}
   .badge.ok{background:var(--ok-bg); color:var(--ok);}
 
   .empty{color:var(--ink-soft); font-size:13px; padding:18px 0; text-align:center;}
   .settings-box p{color:var(--ink-soft); line-height:1.6; font-size:13.5px;}
-  .settings-box code{background:#F0F0EC; padding:1px 5px; font-family:'IBM Plex Mono',monospace; font-size:12.5px;}
+  .settings-box code{background:var(--code-bg); padding:1px 5px; font-family:'IBM Plex Mono',monospace; font-size:12.5px;}
   .save-msg{font-size:12.5px; color:var(--ok); margin-left:10px;}
   .toast{
     position:fixed; bottom:20px; right:20px; background:var(--ink); color:#fff;
@@ -98,12 +121,19 @@
     position:fixed; inset:0; background:var(--teal-dark); z-index:100;
     display:flex; align-items:center; justify-content:center;
   }
-  .login-card{background:#fff; width:320px; padding:34px 32px; text-align:center; box-shadow:0 10px 30px rgba(0,0,0,.2);}
+  .login-card{background:var(--login-card-bg); width:320px; padding:34px 32px; text-align:center; box-shadow:0 10px 30px rgba(0,0,0,.2);}
   .login-card h1{font-family:'Fraunces',serif; font-size:24px; color:var(--ink); margin-bottom:6px;}
   .login-card p{color:var(--ink-soft); font-size:13.5px; margin:0 0 18px 0;}
   .login-card input{width:100%; margin-bottom:12px; padding:9px 10px;}
   .login-card button{width:100%;}
   .login-error{color:var(--rust); font-size:12.5px; margin-top:10px;}
+
+  .theme-toggle{display:flex; gap:8px;}
+  .theme-toggle button{
+    border:1px solid var(--line); background:var(--card); color:var(--ink);
+    padding:8px 16px; font-size:13.5px; cursor:pointer; font-family:inherit;
+  }
+  .theme-toggle button.active{background:var(--teal); border-color:var(--teal); color:#fff;}
 
   @media (max-width:720px){
     body{flex-direction:column;}
@@ -341,6 +371,15 @@
       <h2>Pengaturan</h2>
       <p>Halaman ini sudah tersambung ke Web App-nya. Ganti Secret Key di sini kalau perlu.</p>
     </div>
+    <div class="card">
+      <div class="card-head"><h3>Tampilan</h3></div>
+      <div class="card-body">
+        <div class="theme-toggle">
+          <button type="button" id="btnThemeLight">Terang</button>
+          <button type="button" id="btnThemeDark">Gelap</button>
+        </div>
+      </div>
+    </div>
     <div class="card settings-box">
       <div class="card-body">
         <form class="inline-add" id="form-settings">
@@ -361,8 +400,23 @@
 <script>
 const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbyTDBipMbcTiqRILU3fsEDwjXW8TBUhU0NxHOXfnm3aZ-7aQkLSRTlTY1UbVQrisYvdMQ/exec";
 const KEY_STORAGE = 'manifest_key_v1';
+const THEME_STORAGE = 'manifest_theme_v1';
 let cfg = null;
 let CACHE = { vaksin:[], vials:[], vialUsage:[], events:[], medical:[], merch:[] };
+
+// ---------- theme ----------
+function applyTheme(theme){
+  document.documentElement.setAttribute('data-theme', theme);
+  document.getElementById('btnThemeLight').classList.toggle('active', theme==='light');
+  document.getElementById('btnThemeDark').classList.toggle('active', theme==='dark');
+}
+document.getElementById('btnThemeLight').addEventListener('click', ()=>{
+  localStorage.setItem(THEME_STORAGE, 'light'); applyTheme('light');
+});
+document.getElementById('btnThemeDark').addEventListener('click', ()=>{
+  localStorage.setItem(THEME_STORAGE, 'dark'); applyTheme('dark');
+});
+applyTheme(localStorage.getItem(THEME_STORAGE) || 'light');
 
 // ---------- nav ----------
 document.querySelectorAll('nav button').forEach(btn=>{
