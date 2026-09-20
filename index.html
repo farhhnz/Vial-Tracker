@@ -112,6 +112,7 @@
     <span>event & vial tracker</span>
   </div>
   <button data-tab="dashboard" class="active">Dashboard</button>
+  <button data-tab="vaksin">Daftar Vaksin</button>
   <button data-tab="vials">Vial Vaksin</button>
   <button data-tab="events">Event</button>
   <button data-tab="medical">Medical Checkup</button>
@@ -139,6 +140,34 @@
     </div>
   </section>
 
+  <!-- VAKSIN MASTER -->
+  <section id="tab-vaksin" style="display:none">
+    <div class="pagehead">
+      <h2>Daftar Vaksin</h2>
+      <p>Master data jenis vaksin, biar penamaan konsisten tiap dipakai di tab Vial.</p>
+    </div>
+    <div class="card">
+      <div class="card-head"><h3>Tambah Jenis Vaksin</h3></div>
+      <div class="card-body">
+        <form class="inline-add" id="form-vaksin">
+          <div class="field"><label>Nama Vaksin</label><input type="text" name="namaVaksin" placeholder="cth. Influenza" required></div>
+          <div class="field"><label>Produsen</label><input type="text" name="produsen" placeholder="cth. Biofarma"></div>
+          <div class="field"><label>Keterangan</label><input type="text" name="keterangan"></div>
+          <button class="primary" type="submit">Simpan</button>
+        </form>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head"><h3>Daftar</h3></div>
+      <div class="card-body">
+        <table>
+          <thead><tr><th>Nama Vaksin</th><th>Produsen</th><th>Keterangan</th><th></th></tr></thead>
+          <tbody id="vaksinTable"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
   <!-- VIALS -->
   <section id="tab-vials" style="display:none">
     <div class="pagehead">
@@ -153,7 +182,7 @@
           <div class="field"><label>Tanggal Terima</label><input type="date" name="tanggalTerima" required></div>
           <div class="field"><label>No PO</label><input type="text" name="noPO" placeholder="PO-2026-001" required></div>
           <div class="field"><label>No Faktur</label><input type="text" name="noFaktur" placeholder="FKT-2026-001" required></div>
-          <div class="field"><label>Jenis Vaksin</label><input type="text" name="jenisVaksin" placeholder="cth. Influenza" required></div>
+          <div class="field"><label>Jenis Vaksin</label><select name="jenisVaksin" id="vaksinSelectForVial" required></select></div>
           <div class="field"><label>Qty Masuk</label><input type="number" name="qtyMasuk" min="1" required></div>
           <div class="field"><label>Tanggal Expired</label><input type="date" name="tanggalExpired"></div>
           <div class="field"><label>Catatan</label><input type="text" name="catatan"></div>
@@ -314,7 +343,7 @@
 <script>
 const CFG_KEY = 'manifest_cfg_v1';
 let cfg = JSON.parse(localStorage.getItem(CFG_KEY) || 'null');
-let CACHE = { vials:[], vialUsage:[], events:[], medical:[], merch:[] };
+let CACHE = { vaksin:[], vials:[], vialUsage:[], events:[], medical:[], merch:[] };
 
 // ---------- nav ----------
 document.querySelectorAll('nav button').forEach(btn=>{
@@ -368,17 +397,19 @@ function newId(){ return Date.now().toString(36) + Math.random().toString(36).sl
 // ---------- load all ----------
 async function loadAll(){
   if(!cfg) return;
-  const [vials, vialUsage, events, medical, merch] = await Promise.all([
-    apiGet('vials'), apiGet('vialUsage'), apiGet('events'), apiGet('medical'), apiGet('merch')
+  const [vaksin, vials, vialUsage, events, medical, merch] = await Promise.all([
+    apiGet('vaksin'), apiGet('vials'), apiGet('vialUsage'), apiGet('events'), apiGet('medical'), apiGet('merch')
   ]);
-  CACHE = { vials, vialUsage, events, medical, merch };
+  CACHE = { vaksin, vials, vialUsage, events, medical, merch };
   renderAll();
 }
 
 function renderAll(){
   renderEventSelects();
   renderVialSelect();
+  renderVaksinSelect();
   renderDashboard();
+  renderVaksin();
   renderVials();
   renderVialUsage();
   renderEvents();
@@ -405,6 +436,19 @@ function renderVialSelect(){
   const cur = sel.value;
   sel.innerHTML = CACHE.vials.map(v=>`<option value="${v.id}">${v.jenisVaksin} — ${v.noPO}</option>`).join('');
   sel.value = cur;
+}
+function renderVaksinSelect(){
+  const sel = document.getElementById('vaksinSelectForVial');
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">Pilih jenis vaksin…</option>' +
+    CACHE.vaksin.map(v=>`<option value="${v.namaVaksin}">${v.namaVaksin}</option>`).join('');
+  sel.value = cur;
+}
+function renderVaksin(){
+  document.getElementById('vaksinTable').innerHTML = CACHE.vaksin.map(v=>`
+    <tr><td>${v.namaVaksin}</td><td>${v.produsen||'-'}</td><td>${v.keterangan||'-'}</td>
+    <td><button class="danger-link" onclick="delRow('vaksin','${v.id}')">Hapus</button></td></tr>`).join('')
+    || `<tr><td colspan="4" class="empty">Belum ada jenis vaksin. Tambah dulu di sini sebelum input vial.</td></tr>`;
 }
 
 function vialSisa(vial){
@@ -505,6 +549,12 @@ function formToObj(form){
   return obj;
 }
 
+document.getElementById('form-vaksin').addEventListener('submit', async e=>{
+  e.preventDefault();
+  const row = formToObj(e.target); row.id = newId();
+  const r = await apiPost('vaksin','add',{row});
+  if(r){ toast('Jenis vaksin disimpan'); e.target.reset(); loadAll(); }
+});
 document.getElementById('form-vial').addEventListener('submit', async e=>{
   e.preventDefault();
   const row = formToObj(e.target); row.id = newId();
