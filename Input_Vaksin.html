@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tracker Vaksin</title>
+<style>
+  :root {
+    --primary: #1F4E78;
+    --primary-light: #2E6DA4;
+    --bg: #F4F6F8;
+    --card: #FFFFFF;
+    --text: #1a1a1a;
+    --muted: #6b7280;
+    --success: #1e7e34;
+    --error: #c0392b;
+    --yellow: #FFF2CC;
+    --border: #dfe3e8;
+    box-sizing: border-box;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--bg);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    color: var(--text);
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  header {
+    background: var(--primary);
+    color: white;
+    padding: 18px 16px 14px;
+    padding-top: calc(18px + env(safe-area-inset-top, 0px));
+    text-align: center;
+  }
+  header h1 { margin: 0; font-size: 18px; font-weight: 700; }
+  header p { margin: 4px 0 0; font-size: 12px; opacity: 0.85; }
+
+  .tabs {
+    display: flex;
+    background: white;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  .tab {
+    flex: 1;
+    text-align: center;
+    padding: 12px 4px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--muted);
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+  }
+  .tab.active {
+    color: var(--primary);
+    border-bottom: 3px solid var(--primary);
+  }
+
+  main { padding: 16px; max-width: 480px; margin: 0 auto; }
+
+  .card {
+    background: var(--card);
+    border-radius: 12px;
+    padding: 18px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  }
+
+  .form-section { display: none; }
+  .form-section.active { display: block; }
+
+  label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    margin: 14px 0 6px;
+    color: var(--text);
+  }
+  label.req::after { content: " *"; color: var(--error); }
+
+  input, select, textarea {
+    width: 100%;
+    padding: 11px 12px;
+    font-size: 15px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--yellow);
+    font-family: inherit;
+  }
+  textarea { resize: vertical; min-height: 60px; }
+  input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: var(--primary-light);
+  }
+
+  button.submit-btn {
+    width: 100%;
+    margin-top: 20px;
+    padding: 14px;
+    font-size: 15px;
+    font-weight: 700;
+    color: white;
+    background: var(--primary);
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+  }
+  button.submit-btn:active { background: var(--primary-light); }
+  button.submit-btn:disabled { opacity: 0.6; }
+
+  .msg {
+    margin-top: 14px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    display: none;
+  }
+  .msg.ok { background: #e6f4ea; color: var(--success); display: block; }
+  .msg.err { background: #fdecea; color: var(--error); display: block; }
+
+  .config-banner {
+    background: #fff3cd;
+    color: #7a5c00;
+    font-size: 12px;
+    padding: 10px 16px;
+    text-align: center;
+  }
+
+  .hint {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+
+  .gear-btn {
+    position: absolute;
+    right: 12px;
+    top: calc(16px + env(safe-area-inset-top, 0px));
+    background: rgba(255,255,255,0.15);
+    border: none;
+    color: white;
+    font-size: 16px;
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    cursor: pointer;
+  }
+
+  .overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .overlay.show { display: flex; }
+  .overlay-card {
+    background: white;
+    border-radius: 14px;
+    padding: 22px;
+    max-width: 420px;
+    width: 100%;
+  }
+  .overlay-card h2 { margin: 0 0 8px; font-size: 16px; color: var(--primary); }
+  .overlay-card p { font-size: 13px; color: var(--muted); margin: 0 0 14px; line-height: 1.5; }
+  .overlay-card input {
+    width: 100%;
+    padding: 11px 12px;
+    font-size: 14px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin-bottom: 12px;
+  }
+  .overlay-actions { display: flex; gap: 10px; }
+  .overlay-actions button {
+    flex: 1;
+    padding: 12px;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 14px;
+    border: none;
+    cursor: pointer;
+  }
+  .btn-save { background: var(--primary); color: white; }
+  .btn-cancel { background: #eee; color: var(--text); }
+  .url-status { font-size: 11px; margin-top: -6px; margin-bottom: 12px; }
+  .url-status.ok { color: var(--success); }
+  .url-status.err { color: var(--error); }
+</style>
+</head>
+<body>
+
+<header style="position: relative;">
+  <h1>🩹 Tracker Vaksin</h1>
+  <p>Input PO, Faktur & Pemakaian Event</p>
+  <button class="gear-btn" id="openSettings">⚙️</button>
+</header>
+
+<div id="configBanner" class="config-banner" style="display:none;">
+  ⚠️ Belum terhubung ke Google Sheets. Ketuk ikon ⚙️ di pojok kanan atas buat masukin URL Apps Script.
+</div>
+
+<div class="overlay" id="settingsOverlay">
+  <div class="overlay-card">
+    <h2>Hubungkan ke Google Sheets</h2>
+    <p>Paste "Web app URL" hasil deploy Apps Script kamu di sini (lihat file AppsScript_Code.gs untuk cara deploy-nya). Cuma perlu sekali, otomatis kesimpen di HP ini.</p>
+    <input type="url" id="urlInput" placeholder="https://script.google.com/macros/s/.../exec">
+    <div class="overlay-actions">
+      <button class="btn-cancel" id="cancelSettings">Tutup</button>
+      <button class="btn-save" id="saveSettings">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<div class="tabs">
+  <div class="tab active" data-tab="po">PO</div>
+  <div class="tab" data-tab="faktur">Faktur</div>
+  <div class="tab" data-tab="event">Pemakaian</div>
+</div>
+
+<main>
+  <div class="card">
+
+    <!-- FORM PO -->
+    <form class="form-section active" id="formPO">
+      <label class="req">Tanggal PO</label>
+      <input type="date" id="po_tanggal" required>
+
+      <label class="req">Kode Vaksin</label>
+      <select id="po_kode" required></select>
+
+      <label class="req">Supplier</label>
+      <input type="text" id="po_supplier" placeholder="Nama supplier" required>
+
+      <label class="req">Qty PO</label>
+      <input type="number" id="po_qty" min="1" placeholder="Jumlah vial" required>
+
+      <label>Estimasi Tiba</label>
+      <input type="date" id="po_estimasi">
+
+      <label>Status</label>
+      <select id="po_status">
+        <option>Draft</option>
+        <option>Dikirim ke Supplier</option>
+        <option>Dikonfirmasi</option>
+        <option>Selesai</option>
+      </select>
+
+      <button type="submit" class="submit-btn">Simpan PO</button>
+      <div class="msg" id="po_msg"></div>
+    </form>
+
+    <!-- FORM FAKTUR -->
+    <form class="form-section" id="formFaktur">
+      <label class="req">Tanggal Faktur</label>
+      <input type="date" id="fk_tanggal" required>
+
+      <label>No PO Terkait</label>
+      <input type="text" id="fk_nopo" placeholder="Contoh: PO-001">
+      <div class="hint">Cek No PO di tab "PO" atau di spreadsheet</div>
+
+      <label class="req">Kode Vaksin</label>
+      <select id="fk_kode" required></select>
+
+      <label class="req">Supplier</label>
+      <input type="text" id="fk_supplier" required>
+
+      <label class="req">Qty Diterima</label>
+      <input type="number" id="fk_qty" min="1" required>
+
+      <label>No Batch</label>
+      <input type="text" id="fk_batch">
+
+      <label>Tanggal Kedaluwarsa (Exp Date)</label>
+      <input type="date" id="fk_exp">
+
+      <button type="submit" class="submit-btn">Simpan Faktur</button>
+      <div class="msg" id="fk_msg"></div>
+    </form>
+
+    <!-- FORM PEMAKAIAN EVENT -->
+    <form class="form-section" id="formEvent">
+      <label class="req">Tanggal Event</label>
+      <input type="date" id="ev_tanggal" required>
+
+      <label class="req">Nama Event</label>
+      <input type="text" id="ev_nama" required>
+
+      <label>Lokasi</label>
+      <input type="text" id="ev_lokasi">
+
+      <label class="req">Kode Vaksin</label>
+      <select id="ev_kode" required></select>
+
+      <label class="req">Qty Terpakai</label>
+      <input type="number" id="ev_qty" min="1" required>
+
+      <label>Catatan</label>
+      <textarea id="ev_catatan"></textarea>
+
+      <button type="submit" class="submit-btn">Simpan Pemakaian</button>
+      <div class="msg" id="ev_msg"></div>
+    </form>
+
+  </div>
+</main>
+
+<script>
+  // URL Apps Script disimpan di localStorage HP ini (diisi lewat menu ⚙️)
+  let WEB_APP_URL = "";
+  try {
+    WEB_APP_URL = localStorage.getItem("vaksin_web_app_url") || "";
+  } catch (e) { /* localStorage tidak tersedia, lanjut tanpa cache */ }
+
+  const settingsOverlay = document.getElementById("settingsOverlay");
+  const urlInput = document.getElementById("urlInput");
+  const configBanner = document.getElementById("configBanner");
+
+  function refreshConfigState() {
+    const valid = WEB_APP_URL && WEB_APP_URL.indexOf("script.google.com") !== -1;
+    configBanner.style.display = valid ? "none" : "block";
+    return valid;
+  }
+
+  document.getElementById("openSettings").addEventListener("click", () => {
+    urlInput.value = WEB_APP_URL;
+    settingsOverlay.classList.add("show");
+  });
+  document.getElementById("cancelSettings").addEventListener("click", () => {
+    settingsOverlay.classList.remove("show");
+  });
+  document.getElementById("saveSettings").addEventListener("click", () => {
+    const val = urlInput.value.trim();
+    if (!val) return;
+    WEB_APP_URL = val;
+    try { localStorage.setItem("vaksin_web_app_url", val); } catch (e) {}
+    settingsOverlay.classList.remove("show");
+    refreshConfigState();
+    loadVaksinList();
+  });
+
+  if (!refreshConfigState()) {
+    // pertama kali dibuka & belum ada URL tersimpan -> langsung buka setting
+    settingsOverlay.classList.add("show");
+  }
+
+  // Tab switching
+  document.querySelectorAll(".tab").forEach(tab => {
+    tab.addEventListener("click", () => {
+      document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+      document.querySelectorAll(".form-section").forEach(f => f.classList.remove("active"));
+      tab.classList.add("active");
+      document.getElementById("form" + capitalize(tab.dataset.tab)).classList.add("active");
+    });
+  });
+  function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+
+  // Load daftar vaksin ke semua dropdown
+  async function loadVaksinList() {
+    const selects = [
+      document.getElementById("po_kode"),
+      document.getElementById("fk_kode"),
+      document.getElementById("ev_kode"),
+    ];
+    selects.forEach(sel => sel.innerHTML = '<option value="">Memuat...</option>');
+
+    try {
+      const res = await fetch(WEB_APP_URL + "?action=getVaksin");
+      const json = await res.json();
+      const list = json.data || [];
+
+      selects.forEach(sel => {
+        sel.innerHTML = '<option value="">-- pilih vaksin --</option>';
+        list.forEach(v => {
+          const opt = document.createElement("option");
+          opt.value = v.kode;
+          opt.textContent = v.kode + " — " + v.nama;
+          sel.appendChild(opt);
+        });
+      });
+    } catch (err) {
+      selects.forEach(sel => sel.innerHTML = '<option value="">Gagal memuat (cek URL / koneksi)</option>');
+    }
+  }
+
+  async function postData(action, payload) {
+    const body = JSON.stringify({ action, ...payload });
+    const res = await fetch(WEB_APP_URL, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" }, // hindari CORS preflight
+      body,
+    });
+    return res.json();
+  }
+
+  function showMsg(id, ok, text) {
+    const el = document.getElementById(id);
+    el.className = "msg " + (ok ? "ok" : "err");
+    el.textContent = text;
+  }
+
+  // ---- Submit PO ----
+  document.getElementById("formPO").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const btn = e.target.querySelector("button");
+    btn.disabled = true;
+    try {
+      const result = await postData("addPO", {
+        tanggalPO: document.getElementById("po_tanggal").value,
+        kodeVaksin: document.getElementById("po_kode").value,
+        supplier: document.getElementById("po_supplier").value,
+        qty: document.getElementById("po_qty").value,
+        estimasiTiba: document.getElementById("po_estimasi").value,
+        status: document.getElementById("po_status").value,
+      });
+      if (result.status === "ok") {
+        showMsg("po_msg", true, "✓ " + result.message);
+        e.target.reset();
+      } else {
+        showMsg("po_msg", false, "Gagal: " + result.message);
+      }
+    } catch (err) {
+      showMsg("po_msg", false, "Gagal terhubung ke server. Cek koneksi & URL.");
+    }
+    btn.disabled = false;
+  });
+
+  // ---- Submit Faktur ----
+  document.getElementById("formFaktur").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const btn = e.target.querySelector("button");
+    btn.disabled = true;
+    try {
+      const result = await postData("addFaktur", {
+        tanggalFaktur: document.getElementById("fk_tanggal").value,
+        noPO: document.getElementById("fk_nopo").value,
+        kodeVaksin: document.getElementById("fk_kode").value,
+        supplier: document.getElementById("fk_supplier").value,
+        qty: document.getElementById("fk_qty").value,
+        noBatch: document.getElementById("fk_batch").value,
+        expDate: document.getElementById("fk_exp").value,
+      });
+      if (result.status === "ok") {
+        showMsg("fk_msg", true, "✓ " + result.message);
+        e.target.reset();
+      } else {
+        showMsg("fk_msg", false, "Gagal: " + result.message);
+      }
+    } catch (err) {
+      showMsg("fk_msg", false, "Gagal terhubung ke server. Cek koneksi & URL.");
+    }
+    btn.disabled = false;
+  });
+
+  // ---- Submit Event ----
+  document.getElementById("formEvent").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const btn = e.target.querySelector("button");
+    btn.disabled = true;
+    try {
+      const result = await postData("addEvent", {
+        tanggalEvent: document.getElementById("ev_tanggal").value,
+        namaEvent: document.getElementById("ev_nama").value,
+        lokasi: document.getElementById("ev_lokasi").value,
+        kodeVaksin: document.getElementById("ev_kode").value,
+        qty: document.getElementById("ev_qty").value,
+        catatan: document.getElementById("ev_catatan").value,
+      });
+      if (result.status === "ok") {
+        showMsg("ev_msg", true, "✓ " + result.message);
+        e.target.reset();
+      } else {
+        showMsg("ev_msg", false, "Gagal: " + result.message);
+      }
+    } catch (err) {
+      showMsg("ev_msg", false, "Gagal terhubung ke server. Cek koneksi & URL.");
+    }
+    btn.disabled = false;
+  });
+
+  loadVaksinList();
+</script>
+
+</body>
+</html>
