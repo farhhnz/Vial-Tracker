@@ -181,7 +181,6 @@
         <form class="inline-add" id="form-vial">
           <div class="field"><label>Tanggal Terima</label><input type="date" name="tanggalTerima" required></div>
           <div class="field"><label>No PO</label><input type="text" name="noPO" placeholder="PO-2026-001" required></div>
-          <div class="field"><label>No Faktur</label><input type="text" name="noFaktur" placeholder="FKT-2026-001" required></div>
           <div class="field"><label>Jenis Vaksin</label><select name="jenisVaksin" id="vaksinSelectForVial" required></select></div>
           <div class="field"><label>Qty Masuk</label><input type="number" name="qtyMasuk" min="1" required></div>
           <div class="field"><label>Tanggal Expired</label><input type="date" name="tanggalExpired"></div>
@@ -195,7 +194,7 @@
       <div class="card-head"><h3>Daftar Vial</h3></div>
       <div class="card-body">
         <table>
-          <thead><tr><th>Tanggal</th><th>No PO</th><th>No Faktur</th><th>Jenis</th><th>Masuk</th><th>Sisa</th><th>Expired</th><th></th></tr></thead>
+          <thead><tr><th>Tanggal</th><th>No PO</th><th>Jenis</th><th>Masuk</th><th>Sisa</th><th>Expired</th><th></th></tr></thead>
           <tbody id="vialsTable"></tbody>
         </table>
       </div>
@@ -497,10 +496,10 @@ function renderVials(){
   document.getElementById('vialsTable').innerHTML = CACHE.vials.map(v=>`
     <tr>
       <td>${v.tanggalTerima}</td><td class="mono">${v.noPO}</td>
-      <td class="mono">${v.noFaktur}</td><td>${v.jenisVaksin}</td><td>${v.qtyMasuk}</td>
+      <td>${v.jenisVaksin}</td><td>${v.qtyMasuk}</td>
       <td class="mono">${vialSisa(v)}</td><td>${v.tanggalExpired||'-'}</td>
       <td><button class="danger-link" onclick="delRow('vials','${v.id}')">Hapus</button></td>
-    </tr>`).join('') || `<tr><td colspan="8" class="empty">Belum ada vial tercatat</td></tr>`;
+    </tr>`).join('') || `<tr><td colspan="7" class="empty">Belum ada vial tercatat</td></tr>`;
 }
 
 function renderVialUsage(){
