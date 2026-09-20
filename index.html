@@ -94,6 +94,17 @@
   }
   .toast.show{opacity:1;}
 
+  .login-overlay{
+    position:fixed; inset:0; background:var(--teal-dark); z-index:100;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .login-card{background:#fff; width:320px; padding:34px 32px; text-align:center; box-shadow:0 10px 30px rgba(0,0,0,.2);}
+  .login-card h1{font-family:'Fraunces',serif; font-size:24px; color:var(--ink); margin-bottom:6px;}
+  .login-card p{color:var(--ink-soft); font-size:13.5px; margin:0 0 18px 0;}
+  .login-card input{width:100%; margin-bottom:12px; padding:9px 10px;}
+  .login-card button{width:100%;}
+  .login-error{color:var(--rust); font-size:12.5px; margin-top:10px;}
+
   @media (max-width:720px){
     body{flex-direction:column;}
     nav{width:100%; height:auto; position:relative; display:flex; overflow-x:auto; padding:10px 0;}
@@ -105,6 +116,18 @@
 </style>
 </head>
 <body>
+
+<div id="loginOverlay" class="login-overlay">
+  <div class="login-card">
+    <h1>Manifest</h1>
+    <p>Masukkan Secret Key untuk masuk ke tracker.</p>
+    <form id="form-login">
+      <input type="password" id="loginKey" placeholder="Secret Key" required autofocus>
+      <button class="primary" type="submit">Masuk</button>
+      <div class="login-error" id="loginError" style="display:none"></div>
+    </form>
+  </div>
+</div>
 
 <nav>
   <div class="brand">
@@ -315,22 +338,18 @@
   <!-- SETTINGS -->
   <section id="tab-settings" style="display:none">
     <div class="pagehead">
-      <h2>Pengaturan Koneksi</h2>
-      <p>Hubungkan halaman ini ke Google Sheet kamu lewat Apps Script Web App.</p>
+      <h2>Pengaturan</h2>
+      <p>Halaman ini sudah tersambung ke Web App-nya. Ganti Secret Key di sini kalau perlu.</p>
     </div>
     <div class="card settings-box">
       <div class="card-body">
-        <p>1. Buat Google Sheet baru, lalu buka <code>Extensions &gt; Apps Script</code> dan paste kode backend (file terpisah yang sudah disiapkan).<br>
-        2. Ganti <code>SECRET_KEY</code> di kode itu dengan kata sandi rahasiamu sendiri.<br>
-        3. Jalankan fungsi <code>setupSheets()</code> sekali untuk membuat semua tab otomatis.<br>
-        4. Klik <code>Deploy &gt; New deployment &gt; Web app</code>, akses "Anyone", lalu copy URL-nya ke bawah ini.</p>
-        <form class="inline-add" id="form-settings" style="margin-top:14px">
-          <div class="field" style="flex:2 1 300px"><label>Web App URL</label><input type="url" id="cfgUrl" placeholder="https://script.google.com/macros/s/.../exec" required></div>
-          <div class="field"><label>Secret Key</label><input type="text" id="cfgKey" required></div>
-          <button class="primary" type="submit">Simpan & Sambungkan</button>
-          <span class="save-msg" id="saveMsg" style="display:none">Tersimpan di browser ini ✓</span>
+        <form class="inline-add" id="form-settings">
+          <div class="field" style="flex:2 1 300px"><label>Secret Key</label><input type="text" id="cfgKey" required></div>
+          <button class="primary" type="submit">Simpan Key</button>
+          <button class="ghost" type="button" id="btnLogout">Keluar</button>
+          <span class="save-msg" id="saveMsg" style="display:none">Tersimpan ✓</span>
         </form>
-        <p style="margin-top:14px; font-size:12.5px;">Catatan: URL & key ini disimpan hanya di browser kamu (localStorage), tidak dikirim ke server manapun selain Google.</p>
+        <p style="margin-top:14px; font-size:12.5px;">Secret Key ini disimpan hanya di browser kamu (localStorage), tidak dikirim ke server manapun selain Google.</p>
       </div>
     </div>
   </section>
@@ -340,8 +359,9 @@
 <div class="toast" id="toast"></div>
 
 <script>
-const CFG_KEY = 'manifest_cfg_v1';
-let cfg = JSON.parse(localStorage.getItem(CFG_KEY) || 'null');
+const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbyTDBipMbcTiqRILU3fsEDwjXW8TBUhU0NxHOXfnm3aZ-7aQkLSRTlTY1UbVQrisYvdMQ/exec";
+const KEY_STORAGE = 'manifest_key_v1';
+let cfg = null;
 let CACHE = { vaksin:[], vials:[], vialUsage:[], events:[], medical:[], merch:[] };
 
 // ---------- nav ----------
@@ -360,17 +380,57 @@ function toast(msg){
   setTimeout(()=>t.classList.remove('show'), 2200);
 }
 
-// ---------- settings ----------
-if(cfg){
-  document.getElementById('cfgUrl').value = cfg.url;
-  document.getElementById('cfgKey').value = cfg.key;
+// ---------- login gate ----------
+const overlay = document.getElementById('loginOverlay');
+const loginError = document.getElementById('loginError');
+
+async function tryKey(key){
+  const res = await fetch(`${WEBAPP_URL}?sheet=vaksin&key=${encodeURIComponent(key)}`);
+  const json = await res.json();
+  return !json.error;
 }
-document.getElementById('form-settings').addEventListener('submit', e=>{
+
+async function enterWithKey(key, formEl, errEl){
+  const ok = await tryKey(key);
+  if(!ok){
+    errEl.textContent = 'Secret Key salah atau belum cocok dengan Apps Script.';
+    errEl.style.display = 'block';
+    return false;
+  }
+  cfg = { url: WEBAPP_URL, key };
+  localStorage.setItem(KEY_STORAGE, key);
+  errEl.style.display = 'none';
+  return true;
+}
+
+document.getElementById('form-login').addEventListener('submit', async e=>{
   e.preventDefault();
-  cfg = { url: document.getElementById('cfgUrl').value.trim(), key: document.getElementById('cfgKey').value.trim() };
-  localStorage.setItem(CFG_KEY, JSON.stringify(cfg));
-  document.getElementById('saveMsg').style.display='inline';
-  loadAll();
+  const key = document.getElementById('loginKey').value.trim();
+  const success = await enterWithKey(key, e.target, loginError);
+  if(success){
+    overlay.style.display = 'none';
+    loadAll();
+  }
+});
+
+document.getElementById('form-settings').addEventListener('submit', async e=>{
+  e.preventDefault();
+  const key = document.getElementById('cfgKey').value.trim();
+  const errBox = document.getElementById('saveMsg');
+  const success = await enterWithKey(key, e.target, loginError);
+  if(success){
+    document.getElementById('saveMsg').style.display = 'inline';
+    loadAll();
+  } else {
+    toast('Secret Key salah');
+  }
+});
+
+document.getElementById('btnLogout').addEventListener('click', ()=>{
+  localStorage.removeItem(KEY_STORAGE);
+  cfg = null;
+  document.getElementById('loginKey').value = '';
+  overlay.style.display = 'flex';
 });
 
 // ---------- API helpers ----------
@@ -586,9 +646,12 @@ document.getElementById('form-merch').addEventListener('submit', async e=>{
 });
 
 // ---------- init ----------
-if(cfg){ loadAll(); } else {
-  document.querySelector('[data-tab="settings"]').click();
-  toast('Sambungkan ke Google Sheet dulu ya di menu Pengaturan');
+const savedKey = localStorage.getItem(KEY_STORAGE);
+if(savedKey){
+  cfg = { url: WEBAPP_URL, key: savedKey };
+  document.getElementById('cfgKey').value = savedKey;
+  overlay.style.display = 'none';
+  loadAll();
 }
 </script>
 </body>
