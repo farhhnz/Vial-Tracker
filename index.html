@@ -166,7 +166,7 @@
       <div class="card-head"><h3>Daftar Vial</h3></div>
       <div class="card-body">
         <table>
-          <thead><tr><th>ID</th><th>Tanggal</th><th>No PO</th><th>No Faktur</th><th>Jenis</th><th>Masuk</th><th>Sisa</th><th>Expired</th><th></th></tr></thead>
+          <thead><tr><th>Tanggal</th><th>No PO</th><th>No Faktur</th><th>Jenis</th><th>Masuk</th><th>Sisa</th><th>Expired</th><th></th></tr></thead>
           <tbody id="vialsTable"></tbody>
         </table>
       </div>
@@ -216,7 +216,7 @@
       <div class="card-head"><h3>Daftar Event</h3></div>
       <div class="card-body">
         <table>
-          <thead><tr><th>ID</th><th>Nama Event</th><th>Tanggal</th><th>Lokasi</th><th>PIC</th><th>Status</th><th></th></tr></thead>
+          <thead><tr><th>Nama Event</th><th>Tanggal</th><th>Lokasi</th><th>PIC</th><th>Status</th><th></th></tr></thead>
           <tbody id="eventsTable"></tbody>
         </table>
       </div>
@@ -452,11 +452,11 @@ function renderDashboard(){
 function renderVials(){
   document.getElementById('vialsTable').innerHTML = CACHE.vials.map(v=>`
     <tr>
-      <td class="mono">${v.id}</td><td>${v.tanggalTerima}</td><td class="mono">${v.noPO}</td>
+      <td>${v.tanggalTerima}</td><td class="mono">${v.noPO}</td>
       <td class="mono">${v.noFaktur}</td><td>${v.jenisVaksin}</td><td>${v.qtyMasuk}</td>
       <td class="mono">${vialSisa(v)}</td><td>${v.tanggalExpired||'-'}</td>
       <td><button class="danger-link" onclick="delRow('vials','${v.id}')">Hapus</button></td>
-    </tr>`).join('') || `<tr><td colspan="9" class="empty">Belum ada vial tercatat</td></tr>`;
+    </tr>`).join('') || `<tr><td colspan="8" class="empty">Belum ada vial tercatat</td></tr>`;
 }
 
 function renderVialUsage(){
@@ -470,10 +470,10 @@ function renderVialUsage(){
 
 function renderEvents(){
   document.getElementById('eventsTable').innerHTML = CACHE.events.map(e=>`
-    <tr><td class="mono">${e.id}</td><td>${e.namaEvent}</td><td>${e.tanggal}</td><td>${e.lokasi||'-'}</td>
+    <tr><td>${e.namaEvent}</td><td>${e.tanggal}</td><td>${e.lokasi||'-'}</td>
     <td>${e.pic||'-'}</td><td>${e.status}</td>
     <td><button class="danger-link" onclick="delRow('events','${e.id}')">Hapus</button></td></tr>`).join('')
-    || `<tr><td colspan="7" class="empty">Belum ada event</td></tr>`;
+    || `<tr><td colspan="6" class="empty">Belum ada event</td></tr>`;
 }
 
 function renderMedical(){
