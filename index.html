@@ -1,713 +1,971 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>GDTI — Event Tracker</title>
-<link rel="icon" type="image/png" href="icon%20logo%20GDT.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-<style>
-  :root{
-    --paper:#EEF2F0;
-    --card:#FFFFFF;
-    --ink:#1C2E30;
-    --ink-soft:#5B6E6E;
-    --line:#CBD6D2;
-    --teal:#2F6F73;
-    --teal-dark:#204E51;
-    --rust:#B5502E;
-    --rust-bg:#F7E7DF;
-    --ok-bg:#E4F0E6;
-    --ok:#3E7A52;
-    --input-bg:#FFFFFF;
-    --row-line:#E4EAE8;
-    --row-hover:#F7FAF9;
-    --code-bg:#F0F0EC;
-    --login-card-bg:#FFFFFF;
-  }
-  :root[data-theme="dark"]{
-    --paper:#11191A;
-    --card:#1B2524;
-    --ink:#E7EFEE;
-    --ink-soft:#93A6A4;
-    --line:#2C3937;
-    --teal:#5FA6A6;
-    --teal-dark:#0E2325;
-    --rust:#E0916C;
-    --rust-bg:#3A2A20;
-    --ok-bg:#1E3327;
-    --ok:#83C79A;
-    --input-bg:#20302D;
-    --row-line:#28322F;
-    --row-hover:#22302C;
-    --code-bg:#25302D;
-    --login-card-bg:#1B2524;
-  }
-  *{box-sizing:border-box;}
-  body{
-    margin:0; background:var(--paper); color:var(--ink);
-    font-family:'IBM Plex Sans', sans-serif; font-size:14.5px;
-    display:flex; min-height:100vh;
-  }
-  h1,h2,h3{font-family:'Fraunces', serif; font-weight:600; margin:0;}
-  .mono{font-family:'IBM Plex Mono', monospace;}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MedTrack Pro - Event & Vaccine Management</title>
+    
+    <!-- React & ReactDOM -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    
+    <!-- Babel for in-browser JSX compilation -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-  /* Sidebar */
-  nav{
-    width:220px; flex-shrink:0; background:var(--teal-dark); color:#EAF3F2;
-    padding:28px 0; position:sticky; top:0; height:100vh;
-  }
-  nav .brand{padding:0 22px 26px 22px; border-bottom:1px solid rgba(255,255,255,.15); margin-bottom:10px;}
-  nav .brand h1{font-size:19px; color:#fff; line-height:1.2;}
-  nav .brand span{display:block; font-size:11.5px; color:#A9C9C6; margin-top:4px; font-family:'IBM Plex Mono',monospace;}
-  nav button{
-    display:block; width:100%; text-align:left; background:none; border:none;
-    color:#CBE3E1; padding:11px 22px; font-size:14px; cursor:pointer;
-    font-family:inherit; border-left:3px solid transparent;
-  }
-  nav button:hover{background:rgba(255,255,255,.06);}
-  nav button.active{background:rgba(255,255,255,.1); border-left-color:#7FC2BE; color:#fff; font-weight:500;}
+    <style>
+        /* --- CORE STYLES & VARIABLES --- */
+        :root {
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --secondary: #64748b;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --bg-main: #f1f5f9;
+            --bg-card: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+            --sidebar-w: 250px;
+            --header-h: 60px;
+            --radius-md: 8px;
+            --radius-sm: 4px;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+        }
 
-  main{flex:1; padding:32px 40px; max-width:1100px;}
-  .pagehead{margin-bottom:22px;}
-  .pagehead h2{font-size:24px;}
-  .pagehead p{color:var(--ink-soft); margin:4px 0 0 0; font-size:13.5px;}
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            line-height: 1.5;
+        }
 
-  .grid-stats{display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:14px; margin-bottom:26px;}
-  .stat{background:var(--card); border:1px solid var(--line); padding:16px 18px;}
-  .stat .num{font-family:'Fraunces',serif; font-size:26px; font-weight:600;}
-  .stat .lbl{font-size:12.5px; color:var(--ink-soft); margin-top:2px;}
+        /* --- LAYOUT --- */
+        .app-container { display: flex; height: 100vh; overflow: hidden; }
+        
+        .sidebar {
+            width: var(--sidebar-w); background: var(--bg-card);
+            border-right: 1px solid var(--border-color);
+            display: flex; flex-direction: column;
+        }
+        .sidebar-header {
+            height: var(--header-h); display: flex; align-items: center;
+            padding: 0 20px; font-weight: bold; font-size: 1.2rem;
+            border-bottom: 1px solid var(--border-color); color: var(--primary);
+        }
+        .nav-list { list-style: none; padding: 10px 0; }
+        .nav-item {
+            padding: 12px 20px; cursor: pointer; display: flex; align-items: center;
+            gap: 10px; color: var(--text-muted); transition: all 0.2s;
+        }
+        .nav-item:hover { background-color: var(--bg-main); color: var(--primary); }
+        .nav-item.active {
+            background-color: #eff6ff; color: var(--primary);
+            border-right: 3px solid var(--primary);
+        }
 
-  .card{background:var(--card); border:1px solid var(--line); margin-bottom:24px;}
-  .card-head{padding:14px 18px; border-bottom:1px solid var(--line); display:flex; justify-content:space-between; align-items:center;}
-  .card-head h3{font-size:16px;}
-  .card-body{padding:16px 18px;}
+        .main-content {
+            flex: 1; display: flex; flex-direction: column; overflow: hidden;
+        }
+        .topbar {
+            height: var(--header-h); background: var(--bg-card);
+            border-bottom: 1px solid var(--border-color);
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 20px;
+        }
+        .content-area {
+            flex: 1; padding: 20px; overflow-y: auto;
+        }
 
-  form.inline-add{display:flex; flex-wrap:wrap; gap:10px; margin-bottom:4px;}
-  form.inline-add .field{display:flex; flex-direction:column; gap:4px; flex:1; min-width:130px;}
-  form.inline-add label{font-size:11.5px; color:var(--ink-soft); text-transform:none;}
-  input,select{
-    border:1px solid var(--line); padding:7px 9px; font-size:13.5px;
-    font-family:inherit; background:var(--input-bg); color:var(--ink);
-  }
-  input:focus,select:focus{outline:2px solid var(--teal); outline-offset:0; border-color:var(--teal);}
-  button.primary{
-    background:var(--teal); color:#fff; border:none; padding:8px 16px;
-    font-size:13.5px; cursor:pointer; font-family:inherit; align-self:flex-end;
-  }
-  button.primary:hover{background:var(--teal-dark);}
-  button.ghost{background:none; border:1px solid var(--line); padding:7px 12px; cursor:pointer; font-size:13px; font-family:inherit;}
-  button.danger-link{background:none; border:none; color:var(--rust); cursor:pointer; font-size:12.5px; text-decoration:underline; padding:0;}
+        /* --- COMPONENTS --- */
+        .card {
+            background: var(--bg-card); border-radius: var(--radius-md);
+            box-shadow: var(--shadow-sm); padding: 20px; border: 1px solid var(--border-color);
+        }
+        
+        .btn {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 8px 16px; border-radius: var(--radius-sm); border: none;
+            font-weight: 500; cursor: pointer; transition: background 0.2s;
+            font-size: 0.9rem;
+        }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: var(--primary-hover); }
+        .btn-secondary { background: var(--bg-main); color: var(--text-main); border: 1px solid var(--border-color); }
+        .btn-secondary:hover { background: #e2e8f0; }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-sm { padding: 4px 8px; font-size: 0.8rem; }
 
-  table{width:100%; border-collapse:collapse; margin-top:14px; font-size:13.5px;}
-  th{text-align:left; font-weight:500; color:var(--ink-soft); font-size:12px; padding:8px 10px; border-bottom:1px solid var(--line);}
-  td{padding:8px 10px; border-bottom:1px solid var(--row-line);}
-  tr:hover td{background:var(--row-hover);}
-  .badge{padding:2px 8px; font-size:11.5px; display:inline-block;}
-  .badge.low{background:var(--rust-bg); color:var(--rust);}
-  .badge.ok{background:var(--ok-bg); color:var(--ok);}
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: 500; font-size: 0.9rem; }
+        .form-control {
+            width: 100%; padding: 8px 12px; border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm); font-family: inherit; font-size: 0.95rem;
+        }
+        .form-row { display: flex; gap: 15px; }
+        .form-row .form-group { flex: 1; }
 
-  .empty{color:var(--ink-soft); font-size:13px; padding:18px 0; text-align:center;}
-  .settings-box p{color:var(--ink-soft); line-height:1.6; font-size:13.5px;}
-  .settings-box code{background:var(--code-bg); padding:1px 5px; font-family:'IBM Plex Mono',monospace; font-size:12.5px;}
-  .save-msg{font-size:12.5px; color:var(--ok); margin-left:10px;}
-  .toast{
-    position:fixed; bottom:20px; right:20px; background:var(--ink); color:#fff;
-    padding:10px 16px; font-size:13px; opacity:0; transition:opacity .25s; pointer-events:none;
-  }
-  .toast.show{opacity:1;}
+        /* --- TABLES --- */
+        .table-responsive { overflow-x: auto; width: 100%; }
+        table { width: 100%; border-collapse: collapse; text-align: left; }
+        th, td { padding: 12px; border-bottom: 1px solid var(--border-color); }
+        th { background-color: var(--bg-main); font-weight: 600; font-size: 0.85rem; text-transform: uppercase; color: var(--text-muted); }
+        tbody tr:hover { background-color: #f8fafc; }
 
-  .login-overlay{
-    position:fixed; inset:0; background:var(--teal-dark); z-index:100;
-    display:flex; align-items:center; justify-content:center;
-  }
-  .login-card{background:var(--login-card-bg); width:320px; padding:34px 32px; text-align:center; box-shadow:0 10px 30px rgba(0,0,0,.2);}
-  .login-card h1{font-family:'Fraunces',serif; font-size:24px; color:var(--ink); margin-bottom:6px;}
-  .login-card p{color:var(--ink-soft); font-size:13.5px; margin:0 0 18px 0;}
-  .login-card input{width:100%; margin-bottom:12px; padding:9px 10px;}
-  .login-card button{width:100%;}
-  .login-error{color:var(--rust); font-size:12.5px; margin-top:10px;}
+        /* --- BADGES --- */
+        .badge {
+            padding: 4px 8px; border-radius: 999px; font-size: 0.75rem; font-weight: 600;
+            display: inline-block;
+        }
+        .bg-blue { background: #dbeafe; color: #1e40af; }
+        .bg-green { background: #d1fae5; color: #065f46; }
+        .bg-yellow { background: #fef3c7; color: #92400e; }
+        .bg-red { background: #fee2e2; color: #991b1b; }
+        .bg-gray { background: #f1f5f9; color: #475569; }
 
-  .theme-toggle{display:flex; gap:8px;}
-  .theme-toggle button{
-    border:1px solid var(--line); background:var(--card); color:var(--ink);
-    padding:8px 16px; font-size:13.5px; cursor:pointer; font-family:inherit;
-  }
-  .theme-toggle button.active{background:var(--teal); border-color:var(--teal); color:#fff;}
+        /* --- MODAL --- */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background: var(--bg-card); padding: 20px; border-radius: var(--radius-md);
+            width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto;
+            box-shadow: var(--shadow-md);
+        }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .modal-title { font-size: 1.25rem; font-weight: bold; }
+        
+        /* --- TABS --- */
+        .tabs { display: flex; border-bottom: 1px solid var(--border-color); margin-bottom: 20px; gap: 2px; }
+        .tab-btn {
+            padding: 10px 20px; background: transparent; border: none; border-bottom: 2px solid transparent;
+            cursor: pointer; font-weight: 500; color: var(--text-muted);
+        }
+        .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
+        .tab-btn:hover:not(.active) { color: var(--text-main); }
 
-  @media (max-width:720px){
-    body{flex-direction:column;}
-    nav{width:100%; height:auto; position:relative; display:flex; overflow-x:auto; padding:10px 0;}
-    nav .brand{display:none;}
-    nav button{white-space:nowrap; border-left:none; border-bottom:3px solid transparent;}
-    nav button.active{border-left:none; border-bottom-color:#7FC2BE;}
-    main{padding:20px;}
-  }
-</style>
+        /* --- UTILS --- */
+        .flex-between { display: flex; justify-content: space-between; align-items: center; }
+        .flex-gap { display: flex; gap: 10px; }
+        .mt-4 { margin-top: 1rem; }
+        .mb-4 { margin-bottom: 1rem; }
+        .text-muted { color: var(--text-muted); }
+        .text-sm { font-size: 0.875rem; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+    </style>
 </head>
 <body>
+    <div id="root"></div>
 
-<div id="loginOverlay" class="login-overlay">
-  <div class="login-card">
-    <h1>GDTI</h1>
-    <p></p>
-    <form id="form-login">
-      <input type="password" id="loginKey" placeholder="Secret Key" required autofocus>
-      <button class="primary" type="submit">Masuk</button>
-      <div class="login-error" id="loginError" style="display:none"></div>
-    </form>
-  </div>
-</div>
+    <script type="text/babel">
+        const { useState, useEffect, createContext, useContext, useMemo } = React;
 
-<nav>
-  <div class="brand">
-    <h1>GDTI</h1>
-    <span>Operational</span>
-  </div>
-  <button data-tab="dashboard" class="active">Dashboard</button>
-  <button data-tab="vaksin">Daftar Vaksin</button>
-  <button data-tab="vials">Vial Vaksin</button>
-  <button data-tab="events">Event</button>
-  <button data-tab="medical">Medical Checkup</button>
-  <button data-tab="merch">Merchandise</button>
-  <button data-tab="settings">Pengaturan</button>
-</nav>
+        // --- SHARED / ICONS (Inline SVGs to guarantee availability) ---
+        const Icons = {
+            Dashboard: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="9"></rect><rect x="14" y="3" width="7" height="5"></rect><rect x="14" y="12" width="7" height="9"></rect><rect x="3" y="16" width="7" height="5"></rect></svg>,
+            Event: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>,
+            Vial: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M10 2v7.31"></path><path d="M14 9.3V1.99"></path><path d="M8.5 2h7"></path><path d="M14 9.3a6.5 6.5 0 1 1-4 0"></path><line x1="5.52" y1="16" x2="18.48" y2="16"></line></svg>,
+            PO: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>,
+            Download: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>,
+            Plus: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>,
+            Close: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>,
+            Alert: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>,
+            Trash: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+        };
 
-<main>
+        // --- UTILS ---
+        const generateId = (prefix) => `${prefix}${Date.now().toString(36)}${Math.random().toString(36).substr(2, 5)}`.toUpperCase();
+        const formatDate = (dateStr) => {
+            if (!dateStr) return '-';
+            const d = new Date(dateStr);
+            return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+        };
+        const getDaysUntil = (dateStr) => {
+            const today = new Date();
+            const target = new Date(dateStr);
+            const diffTime = target - today;
+            return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        };
 
-  <!-- DASHBOARD -->
-  <section id="tab-dashboard">
-    <div class="pagehead">
-      <h2>Ringkasan Operasional</h2>
-      <p>Status stok vial, event, dan aktivitas terbaru.</p>
-    </div>
-    <div class="grid-stats" id="statGrid"></div>
-    <div class="card">
-      <div class="card-head"><h3>Sisa Stok Vial per Jenis Vaksin</h3></div>
-      <div class="card-body">
-        <table>
-          <thead><tr><th>Jenis Vaksin</th><th>Total Masuk</th><th>Terpakai</th><th>Sisa</th><th>Status</th></tr></thead>
-          <tbody id="stockTable"></tbody>
-        </table>
-      </div>
-    </div>
-  </section>
+        // --- API / STORAGE LAYER (Mock Backend ready to be replaced) ---
+        // We simulate async delays to represent network requests.
+        const STORAGE_KEY = 'medtrack_data_v1';
+        const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-  <!-- VAKSIN MASTER -->
-  <section id="tab-vaksin" style="display:none">
-    <div class="pagehead">
-      <h2>Daftar Vaksin</h2>
-      <p>Master data jenis vaksin, biar penamaan konsisten tiap dipakai di tab Vial.</p>
-    </div>
-    <div class="card">
-      <div class="card-head"><h3>Tambah Jenis Vaksin</h3></div>
-      <div class="card-body">
-        <form class="inline-add" id="form-vaksin">
-          <div class="field"><label>Nama Vaksin</label><input type="text" name="namaVaksin" placeholder="cth. Influenza" required></div>
-          <div class="field"><label>Produsen</label><input type="text" name="produsen" placeholder="cth. Biofarma"></div>
-          <div class="field"><label>Keterangan</label><input type="text" name="keterangan"></div>
-          <button class="primary" type="submit">Simpan</button>
-        </form>
-      </div>
-    </div>
-    <div class="card">
-      <div class="card-head"><h3>Daftar</h3></div>
-      <div class="card-body">
-        <table>
-          <thead><tr><th>Nama Vaksin</th><th>Produsen</th><th>Keterangan</th><th></th></tr></thead>
-          <tbody id="vaksinTable"></tbody>
-        </table>
-      </div>
-    </div>
-  </section>
+        class ApiService {
+            static _getData() {
+                const data = localStorage.getItem(STORAGE_KEY);
+                return data ? JSON.parse(data) : { events: [], pos: [], vials: [] };
+            }
+            static _saveData(data) {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+            }
 
-  <!-- VIALS -->
-  <section id="tab-vials" style="display:none">
-    <div class="pagehead">
-      <h2>Vial Vaksin</h2>
-      <p>Catat vial masuk berdasarkan PO & Faktur, lalu catat pemakaiannya per event.</p>
-    </div>
+            // Events
+            static async getEvents() { await delay(100); return this._getData().events; }
+            static async saveEvent(eventData) {
+                await delay(200);
+                const data = this._getData();
+                const isNew = !eventData.id;
+                const ev = isNew ? { ...eventData, id: generateId('EV-') } : eventData;
+                
+                if (isNew) data.events.push(ev);
+                else data.events = data.events.map(e => e.id === ev.id ? ev : e);
+                
+                this._saveData(data);
+                return ev;
+            }
 
-    <div class="card">
-      <div class="card-head"><h3>Tambah Vial Masuk</h3></div>
-      <div class="card-body">
-        <form class="inline-add" id="form-vial">
-          <div class="field"><label>Tanggal Terima</label><input type="date" name="tanggalTerima" required></div>
-          <div class="field"><label>No PO</label><input type="text" name="noPO" placeholder="PO-2026-001" required></div>
-          <div class="field"><label>Jenis Vaksin</label><select name="jenisVaksin" id="vaksinSelectForVial" required></select></div>
-          <div class="field"><label>Qty Masuk</label><input type="number" name="qtyMasuk" min="1" required></div>
-          <div class="field"><label>Tanggal Expired</label><input type="date" name="tanggalExpired"></div>
-          <div class="field"><label>Catatan</label><input type="text" name="catatan"></div>
-          <button class="primary" type="submit">Simpan</button>
-        </form>
-      </div>
-    </div>
+            // Purchase Orders & Vials
+            static async getPOs() { await delay(100); return this._getData().pos; }
+            static async getVials() { await delay(100); return this._getData().vials; }
+            
+            static async createPO(poData) {
+                await delay(300); // Simulate heavier operation
+                const data = this._getData();
+                const newPO = { ...poData, id: generateId('PO-') };
+                data.pos.push(newPO);
 
-    <div class="card">
-      <div class="card-head"><h3>Daftar Vial</h3></div>
-      <div class="card-body">
-        <table>
-          <thead><tr><th>Tanggal</th><th>No PO</th><th>Jenis</th><th>Masuk</th><th>Sisa</th><th>Expired</th><th></th></tr></thead>
-          <tbody id="vialsTable"></tbody>
-        </table>
-      </div>
-    </div>
+                // CRITICAL LOGIC: Generate individual vials
+                const todayPrefix = new Date().toISOString().slice(2, 10).replace(/-/g, '');
+                let seqCounter = data.vials.filter(v => v.id.includes(todayPrefix)).length + 1;
+                
+                const qty = parseInt(poData.quantity, 10);
+                const dosesPerVial = parseInt(poData.dosesPerVial, 10) || 1;
 
-    <div class="card">
-      <div class="card-head"><h3>Catat Pemakaian Vial di Event</h3></div>
-      <div class="card-body">
-        <form class="inline-add" id="form-vialusage">
-          <div class="field"><label>Vial (ID)</label><select name="vialId" id="vialSelect" required></select></div>
-          <div class="field"><label>Event</label><select name="eventId" id="eventSelectVial" required></select></div>
-          <div class="field"><label>Qty Terpakai</label><input type="number" name="qtyTerpakai" min="1" required></div>
-          <div class="field"><label>Tanggal Pakai</label><input type="date" name="tanggalPakai" required></div>
-          <div class="field"><label>Catatan</label><input type="text" name="catatan"></div>
-          <button class="primary" type="submit">Simpan</button>
-        </form>
-        <table>
-          <thead><tr><th>Vial ID</th><th>Event</th><th>Qty</th><th>Tanggal</th><th></th></tr></thead>
-          <tbody id="vialUsageTable"></tbody>
-        </table>
-      </div>
-    </div>
-  </section>
+                for (let i = 0; i < qty; i++) {
+                    const seqStr = String(seqCounter).padStart(3, '0');
+                    data.vials.push({
+                        id: `VX-${todayPrefix}-${seqStr}`,
+                        poId: newPO.id,
+                        vaccineType: newPO.vaccineType,
+                        lotNumber: newPO.lotNumber,
+                        expiredDate: newPO.expiredDate,
+                        dosesTotal: dosesPerVial,
+                        dosesRemaining: dosesPerVial,
+                        status: 'in stock', // in stock, allocated, used, expired, broken, returned
+                        usageHistory: [] // {eventId, date, dosesUsed, doseRemainingAfter}
+                    });
+                    seqCounter++;
+                }
 
-  <!-- EVENTS -->
-  <section id="tab-events" style="display:none">
-    <div class="pagehead">
-      <h2>Event</h2>
-      <p>Daftar event yang menjadi acuan untuk pemakaian vial, checkup, dan merchandise.</p>
-    </div>
-    <div class="card">
-      <div class="card-head"><h3>Tambah Event</h3></div>
-      <div class="card-body">
-        <form class="inline-add" id="form-event">
-          <div class="field"><label>Nama Event</label><input type="text" name="namaEvent" required></div>
-          <div class="field"><label>Tanggal</label><input type="date" name="tanggal" required></div>
-          <div class="field"><label>Lokasi</label><input type="text" name="lokasi"></div>
-          <div class="field"><label>PIC</label><input type="text" name="pic"></div>
-          <div class="field"><label>Status</label>
-            <select name="status"><option>Rencana</option><option>Berjalan</option><option>Selesai</option><option>Batal</option></select>
-          </div>
-          <button class="primary" type="submit">Simpan</button>
-        </form>
-      </div>
-    </div>
-    <div class="card">
-      <div class="card-head"><h3>Daftar Event</h3></div>
-      <div class="card-body">
-        <table>
-          <thead><tr><th>Nama Event</th><th>Tanggal</th><th>Lokasi</th><th>PIC</th><th>Status</th><th></th></tr></thead>
-          <tbody id="eventsTable"></tbody>
-        </table>
-      </div>
-    </div>
-  </section>
+                this._saveData(data);
+                return { po: newPO };
+            }
 
-  <!-- MEDICAL -->
-  <section id="tab-medical" style="display:none">
-    <div class="pagehead">
-      <h2>Mini Medical Checkup</h2>
-      <p>Catatan checkup kesehatan ringan yang dilakukan di setiap event.</p>
-    </div>
-    <div class="card">
-      <div class="card-head"><h3>Tambah Catatan Checkup</h3></div>
-      <div class="card-body">
-        <form class="inline-add" id="form-medical">
-          <div class="field"><label>Event</label><select name="eventId" id="eventSelectMedical" required></select></div>
-          <div class="field"><label>Nama Peserta</label><input type="text" name="namaPeserta" required></div>
-          <div class="field"><label>Jenis Checkup</label><input type="text" name="jenisCheckup" placeholder="cth. Tensi darah"></div>
-          <div class="field"><label>Hasil / Catatan</label><input type="text" name="hasil"></div>
-          <div class="field"><label>Tanggal</label><input type="date" name="tanggal" required></div>
-          <button class="primary" type="submit">Simpan</button>
-        </form>
-      </div>
-    </div>
-    <div class="card">
-      <div class="card-head"><h3>Riwayat Checkup</h3></div>
-      <div class="card-body">
-        <table>
-          <thead><tr><th>Event</th><th>Peserta</th><th>Jenis</th><th>Hasil</th><th>Tanggal</th><th></th></tr></thead>
-          <tbody id="medicalTable"></tbody>
-        </table>
-      </div>
-    </div>
-  </section>
+            static async updateVial(vialData) {
+                await delay(100);
+                const data = this._getData();
+                data.vials = data.vials.map(v => v.id === vialData.id ? vialData : v);
+                this._saveData(data);
+                return vialData;
+            }
+        }
 
-  <!-- MERCH -->
-  <section id="tab-merch" style="display:none">
-    <div class="pagehead">
-      <h2>Merchandise / Gimmick</h2>
-      <p>Stok merchandise yang dibagikan di setiap event.</p>
-    </div>
-    <div class="card">
-      <div class="card-head"><h3>Tambah / Catat Pemakaian</h3></div>
-      <div class="card-body">
-        <form class="inline-add" id="form-merch">
-          <div class="field"><label>Nama Item</label><input type="text" name="namaItem" required></div>
-          <div class="field"><label>Stok Masuk</label><input type="number" name="stokMasuk" min="0" value="0"></div>
-          <div class="field"><label>Event</label><select name="eventId" id="eventSelectMerch"></select></div>
-          <div class="field"><label>Qty Terpakai</label><input type="number" name="qtyTerpakai" min="0" value="0"></div>
-          <div class="field"><label>Tanggal</label><input type="date" name="tanggal" required></div>
-          <div class="field"><label>Catatan</label><input type="text" name="catatan"></div>
-          <button class="primary" type="submit">Simpan</button>
-        </form>
-      </div>
-    </div>
-    <div class="card">
-      <div class="card-head"><h3>Daftar Merchandise</h3></div>
-      <div class="card-body">
-        <table>
-          <thead><tr><th>Item</th><th>Masuk</th><th>Event</th><th>Terpakai</th><th>Tanggal</th><th></th></tr></thead>
-          <tbody id="merchTable"></tbody>
-        </table>
-      </div>
-    </div>
-  </section>
+        // --- APP CONTEXT ---
+        const AppContext = createContext();
 
-  <!-- SETTINGS -->
-  <section id="tab-settings" style="display:none">
-    <div class="pagehead">
-      <h2>Pengaturan</h2>
-      <p>Halaman ini sudah tersambung ke Web App-nya. Ganti Secret Key di sini kalau perlu.</p>
-    </div>
-    <div class="card">
-      <div class="card-head"><h3>Tampilan</h3></div>
-      <div class="card-body">
-        <div class="theme-toggle">
-          <button type="button" id="btnThemeLight">Terang</button>
-          <button type="button" id="btnThemeDark">Gelap</button>
-        </div>
-      </div>
-    </div>
-    <div class="card settings-box">
-      <div class="card-body">
-        <form class="inline-add" id="form-settings">
-          <div class="field" style="flex:2 1 300px"><label>Secret Key</label><input type="text" id="cfgKey" required></div>
-          <button class="primary" type="submit">Simpan Key</button>
-          <button class="ghost" type="button" id="btnLogout">Keluar</button>
-          <span class="save-msg" id="saveMsg" style="display:none">Tersimpan ✓</span>
-        </form>
-        <p style="margin-top:14px; font-size:12.5px;">Secret Key ini disimpan hanya di browser kamu (localStorage), tidak dikirim ke server manapun selain Google.</p>
-      </div>
-    </div>
-  </section>
+        const AppProvider = ({ children }) => {
+            const [events, setEvents] = useState([]);
+            const [pos, setPos] = useState([]);
+            const [vials, setVials] = useState([]);
+            const [loading, setLoading] = useState(true);
 
-</main>
+            const loadAllData = async () => {
+                setLoading(true);
+                const [e, p, v] = await Promise.all([
+                    ApiService.getEvents(),
+                    ApiService.getPOs(),
+                    ApiService.getVials()
+                ]);
+                setEvents(e); setPos(p); setVials(v);
+                setLoading(false);
+            };
 
-<div class="toast" id="toast"></div>
+            useEffect(() => { loadAllData(); }, []);
 
-<script>
-const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbyTDBipMbcTiqRILU3fsEDwjXW8TBUhU0NxHOXfnm3aZ-7aQkLSRTlTY1UbVQrisYvdMQ/exec";
-const KEY_STORAGE = 'manifest_key_v1';
-const THEME_STORAGE = 'manifest_theme_v1';
-let cfg = null;
-let CACHE = { vaksin:[], vials:[], vialUsage:[], events:[], medical:[], merch:[] };
+            const exportData = () => {
+                const data = JSON.stringify({ events, pos, vials }, null, 2);
+                const blob = new Blob([data], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `MedTrack_Backup_${new Date().toISOString().slice(0,10)}.json`;
+                a.click();
+            };
 
-// ---------- theme ----------
-function applyTheme(theme){
-  document.documentElement.setAttribute('data-theme', theme);
-  document.getElementById('btnThemeLight').classList.toggle('active', theme==='light');
-  document.getElementById('btnThemeDark').classList.toggle('active', theme==='dark');
-}
-document.getElementById('btnThemeLight').addEventListener('click', ()=>{
-  localStorage.setItem(THEME_STORAGE, 'light'); applyTheme('light');
-});
-document.getElementById('btnThemeDark').addEventListener('click', ()=>{
-  localStorage.setItem(THEME_STORAGE, 'dark'); applyTheme('dark');
-});
-applyTheme(localStorage.getItem(THEME_STORAGE) || 'light');
+            return (
+                <AppContext.Provider value={{
+                    events, pos, vials, loading, reloadData: loadAllData, exportData,
+                    addPO: async (data) => { await ApiService.createPO(data); await loadAllData(); },
+                    saveEvent: async (data) => { await ApiService.saveEvent(data); await loadAllData(); },
+                    updateVial: async (data) => { await ApiService.updateVial(data); await loadAllData(); }
+                }}>
+                    {children}
+                </AppContext.Provider>
+            );
+        };
 
-// ---------- nav ----------
-document.querySelectorAll('nav button').forEach(btn=>{
-  btn.addEventListener('click', ()=>{
-    document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
-    btn.classList.add('active');
-    document.querySelectorAll('main > section').forEach(s=>s.style.display='none');
-    document.getElementById('tab-'+btn.dataset.tab).style.display='block';
-  });
-});
+        // --- SHARED COMPONENTS ---
+        const Modal = ({ title, isOpen, onClose, children }) => {
+            if (!isOpen) return null;
+            return (
+                <div className="modal-overlay" onClick={onClose}>
+                    <div className="modal-content" onClick={e => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <h2 className="modal-title">{title}</h2>
+                            <button onClick={onClose} style={{background:'none', border:'none', cursor:'pointer'}}><Icons.Close /></button>
+                        </div>
+                        {children}
+                    </div>
+                </div>
+            );
+        };
 
-function toast(msg){
-  const t=document.getElementById('toast');
-  t.textContent=msg; t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'), 2200);
-}
+        const StatusBadge = ({ status }) => {
+            const map = {
+                'draft': 'bg-gray', 'confirmed': 'bg-blue', 'ongoing': 'bg-yellow', 'done': 'bg-green', 'cancelled': 'bg-red',
+                'in stock': 'bg-green', 'allocated': 'bg-blue', 'used': 'bg-gray', 'expired': 'bg-red', 'broken': 'bg-red'
+            };
+            const colorClass = map[status?.toLowerCase()] || 'bg-gray';
+            return <span className={`badge ${colorClass}`}>{status?.toUpperCase()}</span>;
+        };
 
-// ---------- login gate ----------
-const overlay = document.getElementById('loginOverlay');
-const loginError = document.getElementById('loginError');
+        // --- FEATURE: DASHBOARD ---
+        const Dashboard = () => {
+            const { vials, events } = useContext(AppContext);
 
-async function tryKey(key){
-  const res = await fetch(`${WEBAPP_URL}?sheet=vaksin&key=${encodeURIComponent(key)}`);
-  const json = await res.json();
-  return !json.error;
-}
+            const stats = useMemo(() => {
+                const inStockVials = vials.filter(v => v.status === 'in stock');
+                const totalDoses = inStockVials.reduce((sum, v) => sum + v.dosesRemaining, 0);
+                const upcomingEvents = events.filter(e => ['draft', 'confirmed'].includes(e.status));
+                const expiringVials = inStockVials.filter(v => {
+                    const days = getDaysUntil(v.expiredDate);
+                    return days >= 0 && days <= 30;
+                }).sort((a,b) => new Date(a.expiredDate) - new Date(b.expiredDate));
 
-async function enterWithKey(key, formEl, errEl){
-  const ok = await tryKey(key);
-  if(!ok){
-    errEl.textContent = 'Secret Key salah atau belum cocok dengan Apps Script.';
-    errEl.style.display = 'block';
-    return false;
-  }
-  cfg = { url: WEBAPP_URL, key };
-  localStorage.setItem(KEY_STORAGE, key);
-  errEl.style.display = 'none';
-  return true;
-}
+                return { inStockCount: inStockVials.length, totalDoses, upcomingCount: upcomingEvents.length, expiringVials };
+            }, [vials, events]);
 
-document.getElementById('form-login').addEventListener('submit', async e=>{
-  e.preventDefault();
-  const key = document.getElementById('loginKey').value.trim();
-  const success = await enterWithKey(key, e.target, loginError);
-  if(success){
-    overlay.style.display = 'none';
-    loadAll();
-  }
-});
+            return (
+                <div>
+                    <h2 className="mb-4">Dashboard Overview</h2>
+                    <div className="grid-3 mb-4">
+                        <div className="card">
+                            <div className="text-muted text-sm mb-2">Vials In Stock</div>
+                            <div style={{fontSize: '2rem', fontWeight: 'bold'}}>{stats.inStockCount}</div>
+                            <div className="text-sm text-muted mt-2">({stats.totalDoses} doses available)</div>
+                        </div>
+                        <div className="card">
+                            <div className="text-muted text-sm mb-2">Upcoming Events</div>
+                            <div style={{fontSize: '2rem', fontWeight: 'bold'}}>{stats.upcomingCount}</div>
+                        </div>
+                        <div className="card" style={{borderLeft: '4px solid var(--warning)'}}>
+                            <div className="text-muted text-sm mb-2">Expiring Vials (≤ 30 days)</div>
+                            <div style={{fontSize: '2rem', fontWeight: 'bold', color: 'var(--warning)'}}>
+                                {stats.expiringVials.length}
+                            </div>
+                        </div>
+                    </div>
 
-document.getElementById('form-settings').addEventListener('submit', async e=>{
-  e.preventDefault();
-  const key = document.getElementById('cfgKey').value.trim();
-  const errBox = document.getElementById('saveMsg');
-  const success = await enterWithKey(key, e.target, loginError);
-  if(success){
-    document.getElementById('saveMsg').style.display = 'inline';
-    loadAll();
-  } else {
-    toast('Secret Key salah');
-  }
-});
+                    <div className="card">
+                        <h3 className="mb-4 flex-gap" style={{alignItems:'center'}}>
+                            <Icons.Alert /> Critical Alerts: Expiring Soon
+                        </h3>
+                        {stats.expiringVials.length === 0 ? (
+                            <p className="text-muted">No vials expiring within 30 days.</p>
+                        ) : (
+                            <div className="table-responsive">
+                                <table>
+                                    <thead><tr><th>Vial ID</th><th>Vaccine Type</th><th>Lot #</th><th>Expiry Date</th><th>Days Left</th></tr></thead>
+                                    <tbody>
+                                        {stats.expiringVials.map(v => (
+                                            <tr key={v.id}>
+                                                <td><strong>{v.id}</strong></td>
+                                                <td>{v.vaccineType}</td>
+                                                <td>{v.lotNumber}</td>
+                                                <td>{formatDate(v.expiredDate)}</td>
+                                                <td style={{color: 'var(--danger)', fontWeight: 'bold'}}>
+                                                    {getDaysUntil(v.expiredDate)} days
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        };
 
-document.getElementById('btnLogout').addEventListener('click', ()=>{
-  localStorage.removeItem(KEY_STORAGE);
-  cfg = null;
-  document.getElementById('loginKey').value = '';
-  overlay.style.display = 'flex';
-});
+        // --- FEATURE: PURCHASE ORDERS ---
+        const PurchaseOrders = () => {
+            const { pos, addPO } = useContext(AppContext);
+            const [isModalOpen, setIsModalOpen] = useState(false);
+            const [formData, setFormData] = useState({
+                supplier: '', purchaseDate: '', vaccineType: '', quantity: '', 
+                pricePerVial: '', lotNumber: '', expiredDate: '', dosesPerVial: '1', notes: ''
+            });
 
-// ---------- API helpers ----------
-async function apiGet(sheet){
-  if(!cfg) return [];
-  const res = await fetch(`${cfg.url}?sheet=${sheet}&key=${encodeURIComponent(cfg.key)}`);
-  const json = await res.json();
-  if(json.error){ toast('Error: '+json.error); return []; }
-  return json.data || [];
-}
-async function apiPost(sheet, action, payload){
-  if(!cfg){ toast('Sambungkan ke Google Sheet dulu di menu Pengaturan'); return null; }
-  const res = await fetch(cfg.url, {
-    method:'POST',
-    body: JSON.stringify({ sheet, action, key: cfg.key, ...payload })
-  });
-  const json = await res.json();
-  if(json.error){ toast('Error: '+json.error); return null; }
-  return json;
-}
-function newId(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+            const handleSubmit = async (e) => {
+                e.preventDefault();
+                const total = parseFloat(formData.quantity) * parseFloat(formData.pricePerVial);
+                await addPO({ ...formData, totalPrice: total });
+                setIsModalOpen(false);
+                setFormData({ supplier: '', purchaseDate: '', vaccineType: '', quantity: '', pricePerVial: '', lotNumber: '', expiredDate: '', dosesPerVial: '1', notes: ''});
+            };
 
-// ---------- load all ----------
-async function loadAll(){
-  if(!cfg) return;
-  const [vaksin, vials, vialUsage, events, medical, merch] = await Promise.all([
-    apiGet('vaksin'), apiGet('vials'), apiGet('vialUsage'), apiGet('events'), apiGet('medical'), apiGet('merch')
-  ]);
-  CACHE = { vaksin, vials, vialUsage, events, medical, merch };
-  renderAll();
-}
+            return (
+                <div>
+                    <div className="flex-between mb-4">
+                        <h2>Purchase Orders</h2>
+                        <button className="btn btn-primary" onClick={() => setIsModalOpen(true)}>
+                            <Icons.Plus /> New PO
+                        </button>
+                    </div>
 
-function renderAll(){
-  renderEventSelects();
-  renderVialSelect();
-  renderVaksinSelect();
-  renderDashboard();
-  renderVaksin();
-  renderVials();
-  renderVialUsage();
-  renderEvents();
-  renderMedical();
-  renderMerch();
-}
+                    <div className="card table-responsive">
+                        <table>
+                            <thead>
+                                <tr><th>PO Number</th><th>Date</th><th>Supplier</th><th>Vaccine</th><th>Qty</th><th>Lot #</th><th>Total Cost</th></tr>
+                            </thead>
+                            <tbody>
+                                {pos.length === 0 ? <tr><td colSpan="7" className="text-center text-muted">No Purchase Orders yet.</td></tr> :
+                                pos.map(po => (
+                                    <tr key={po.id}>
+                                        <td><strong>{po.id}</strong></td>
+                                        <td>{formatDate(po.purchaseDate)}</td>
+                                        <td>{po.supplier}</td>
+                                        <td>{po.vaccineType}</td>
+                                        <td>{po.quantity} (x{po.dosesPerVial}d)</td>
+                                        <td>{po.lotNumber}</td>
+                                        <td>Rp {po.totalPrice?.toLocaleString()}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
 
-function eventName(id){
-  const ev = CACHE.events.find(e=>String(e.id)===String(id));
-  return ev ? ev.namaEvent : id;
-}
+                    <Modal title="Create Purchase Order" isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
+                        <form onSubmit={handleSubmit}>
+                            <div className="form-row">
+                                <div className="form-group">
+                                    <label>Supplier</label>
+                                    <input required type="text" className="form-control" value={formData.supplier} onChange={e => setFormData({...formData, supplier: e.target.value})} />
+                                </div>
+                                <div className="form-group">
+                                    <label>Purchase Date</label>
+                                    <input required type="date" className="form-control" value={formData.purchaseDate} onChange={e => setFormData({...formData, purchaseDate: e.target.value})} />
+                                </div>
+                            </div>
+                            <div className="form-row">
+                                <div className="form-group">
+                                    <label>Vaccine Type</label>
+                                    <input required type="text" className="form-control" placeholder="e.g. Fluarix Tetra" value={formData.vaccineType} onChange={e => setFormData({...formData, vaccineType: e.target.value})} />
+                                </div>
+                                <div className="form-group">
+                                    <label>Lot Number</label>
+                                    <input required type="text" className="form-control" value={formData.lotNumber} onChange={e => setFormData({...formData, lotNumber: e.target.value})} />
+                                </div>
+                            </div>
+                            <div className="form-row">
+                                <div className="form-group">
+                                    <label>Qty (Vials)</label>
+                                    <input required type="number" min="1" className="form-control" value={formData.quantity} onChange={e => setFormData({...formData, quantity: e.target.value})} />
+                                </div>
+                                <div className="form-group">
+                                    <label>Doses per Vial</label>
+                                    <input required type="number" min="1" className="form-control" value={formData.dosesPerVial} onChange={e => setFormData({...formData, dosesPerVial: e.target.value})} />
+                                </div>
+                            </div>
+                            <div className="form-row">
+                                <div className="form-group">
+                                    <label>Expiry Date</label>
+                                    <input required type="date" className="form-control" value={formData.expiredDate} onChange={e => setFormData({...formData, expiredDate: e.target.value})} />
+                                </div>
+                                <div className="form-group">
+                                    <label>Price per Vial</label>
+                                    <input required type="number" min="0" className="form-control" value={formData.pricePerVial} onChange={e => setFormData({...formData, pricePerVial: e.target.value})} />
+                                </div>
+                            </div>
+                            <div className="form-group">
+                                <label>Notes</label>
+                                <textarea className="form-control" rows="2" value={formData.notes} onChange={e => setFormData({...formData, notes: e.target.value})}></textarea>
+                            </div>
+                            <div className="mt-4" style={{textAlign: 'right'}}>
+                                <button type="button" className="btn btn-secondary" style={{marginRight: '10px'}} onClick={() => setIsModalOpen(false)}>Cancel</button>
+                                <button type="submit" className="btn btn-primary">Save & Generate Vials</button>
+                            </div>
+                        </form>
+                    </Modal>
+                </div>
+            );
+        };
 
-function renderEventSelects(){
-  const opts = '<option value="">—</option>' + CACHE.events.map(e=>`<option value="${e.id}">${e.namaEvent}</option>`).join('');
-  ['eventSelectVial','eventSelectMedical','eventSelectMerch'].forEach(id=>{
-    const sel = document.getElementById(id);
-    const cur = sel.value;
-    sel.innerHTML = opts;
-    sel.value = cur;
-  });
-}
-function renderVialSelect(){
-  const sel = document.getElementById('vialSelect');
-  const cur = sel.value;
-  sel.innerHTML = CACHE.vials.map(v=>`<option value="${v.id}">${v.jenisVaksin} — ${v.noPO}</option>`).join('');
-  sel.value = cur;
-}
-function renderVaksinSelect(){
-  const sel = document.getElementById('vaksinSelectForVial');
-  const cur = sel.value;
-  sel.innerHTML = '<option value="">Pilih jenis vaksin…</option>' +
-    CACHE.vaksin.map(v=>`<option value="${v.namaVaksin}">${v.namaVaksin}</option>`).join('');
-  sel.value = cur;
-}
-function renderVaksin(){
-  document.getElementById('vaksinTable').innerHTML = CACHE.vaksin.map(v=>`
-    <tr><td>${v.namaVaksin}</td><td>${v.produsen||'-'}</td><td>${v.keterangan||'-'}</td>
-    <td><button class="danger-link" onclick="delRow('vaksin','${v.id}')">Hapus</button></td></tr>`).join('')
-    || `<tr><td colspan="4" class="empty">Belum ada jenis vaksin. Tambah dulu di sini sebelum input vial.</td></tr>`;
-}
+        // --- FEATURE: VIALS ---
+        const Vials = () => {
+            const { vials } = useContext(AppContext);
+            const [selectedVial, setSelectedVial] = useState(null);
 
-function vialSisa(vial){
-  const used = CACHE.vialUsage.filter(u=>String(u.vialId)===String(vial.id))
-    .reduce((s,u)=>s+Number(u.qtyTerpakai||0),0);
-  return Number(vial.qtyMasuk||0) - used;
-}
+            return (
+                <div>
+                    <h2 className="mb-4">Vial Tracker</h2>
+                    <div className="card table-responsive">
+                        <table>
+                            <thead>
+                                <tr><th>Vial ID</th><th>Vaccine</th><th>Lot #</th><th>Expiry</th><th>Doses</th><th>Status</th><th>Action</th></tr>
+                            </thead>
+                            <tbody>
+                                {vials.map(v => (
+                                    <tr key={v.id}>
+                                        <td><strong>{v.id}</strong></td>
+                                        <td>{v.vaccineType}</td>
+                                        <td>{v.lotNumber}</td>
+                                        <td>{formatDate(v.expiredDate)}</td>
+                                        <td>{v.dosesRemaining} / {v.dosesTotal}</td>
+                                        <td><StatusBadge status={v.status} /></td>
+                                        <td>
+                                            <button className="btn btn-secondary btn-sm" onClick={() => setSelectedVial(v)}>Details</button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
 
-function renderDashboard(){
-  const totalMasuk = CACHE.vials.reduce((s,v)=>s+Number(v.qtyMasuk||0),0);
-  const totalTerpakai = CACHE.vialUsage.reduce((s,u)=>s+Number(u.qtyTerpakai||0),0);
-  const sisaTotal = totalMasuk - totalTerpakai;
-  const eventAktif = CACHE.events.filter(e=>e.status==='Berjalan' || e.status==='Rencana').length;
+                    <Modal title={`Vial Details: ${selectedVial?.id}`} isOpen={!!selectedVial} onClose={() => setSelectedVial(null)}>
+                        {selectedVial && (
+                            <div>
+                                <div className="grid-2 mb-4">
+                                    <div>
+                                        <p className="text-sm text-muted">Origin PO</p>
+                                        <p><strong>{selectedVial.poId}</strong></p>
+                                    </div>
+                                    <div>
+                                        <p className="text-sm text-muted">Status</p>
+                                        <p><StatusBadge status={selectedVial.status} /></p>
+                                    </div>
+                                    <div>
+                                        <p className="text-sm text-muted">Vaccine & Lot</p>
+                                        <p>{selectedVial.vaccineType} (Lot: {selectedVial.lotNumber})</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-sm text-muted">Expiry</p>
+                                        <p>{formatDate(selectedVial.expiredDate)}</p>
+                                    </div>
+                                </div>
+                                <h4 className="mb-2">Usage History</h4>
+                                {selectedVial.usageHistory?.length > 0 ? (
+                                    <table className="table-responsive">
+                                        <thead><tr><th>Date</th><th>Event ID</th><th>Doses Used</th><th>Remaining</th></tr></thead>
+                                        <tbody>
+                                            {selectedVial.usageHistory.map((h, i) => (
+                                                <tr key={i}>
+                                                    <td>{formatDate(h.date)}</td>
+                                                    <td>{h.eventId}</td>
+                                                    <td>{h.dosesUsed}</td>
+                                                    <td>{h.doseRemainingAfter}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                ) : (
+                                    <p className="text-muted text-sm">No usage history recorded yet.</p>
+                                )}
+                            </div>
+                        )}
+                    </Modal>
+                </div>
+            );
+        };
 
-  document.getElementById('statGrid').innerHTML = `
-    <div class="stat"><div class="num mono">${sisaTotal}</div><div class="lbl">Sisa vial total</div></div>
-    <div class="stat"><div class="num mono">${CACHE.events.length}</div><div class="lbl">Total event</div></div>
-    <div class="stat"><div class="num mono">${eventAktif}</div><div class="lbl">Event aktif / rencana</div></div>
-    <div class="stat"><div class="num mono">${CACHE.medical.length}</div><div class="lbl">Catatan medical checkup</div></div>
-  `;
+        // --- FEATURE: EVENTS (List & Form) ---
+        const Events = () => {
+            const { events, saveEvent } = useContext(AppContext);
+            const [viewingEvent, setViewingEvent] = useState(null);
+            const [isFormOpen, setIsFormOpen] = useState(false);
+            const [formData, setFormData] = useState({});
 
-  const byType = {};
-  CACHE.vials.forEach(v=>{
-    const t = v.jenisVaksin || '(tanpa nama)';
-    if(!byType[t]) byType[t] = { masuk:0, terpakai:0 };
-    byType[t].masuk += Number(v.qtyMasuk||0);
-  });
-  CACHE.vialUsage.forEach(u=>{
-    const vial = CACHE.vials.find(v=>String(v.id)===String(u.vialId));
-    if(!vial) return;
-    const t = vial.jenisVaksin || '(tanpa nama)';
-    if(!byType[t]) byType[t] = { masuk:0, terpakai:0 };
-    byType[t].terpakai += Number(u.qtyTerpakai||0);
-  });
+            const openForm = (ev = null) => {
+                if(ev) setFormData(ev);
+                else setFormData({ name: '', client: '', location: '', dateStart: '', dateEnd: '', type: 'vaksinasi', status: 'draft', manpower: [], checklist: [], requirements: [] });
+                setIsFormOpen(true);
+            };
 
-  const rows = Object.entries(byType).map(([type, d])=>{
-    const sisa = d.masuk - d.terpakai;
-    const low = sisa <= 10;
-    return `<tr><td>${type}</td><td>${d.masuk}</td><td>${d.terpakai}</td><td class="mono">${sisa}</td>
-      <td><span class="badge ${low?'low':'ok'}">${low?'Stok Menipis':'Aman'}</span></td></tr>`;
-  }).join('');
-  document.getElementById('stockTable').innerHTML = rows || `<tr><td colspan="5" class="empty">Belum ada data vial</td></tr>`;
-}
+            const handleSaveBasic = async (e) => {
+                e.preventDefault();
+                await saveEvent(formData);
+                setIsFormOpen(false);
+            };
 
-function renderVials(){
-  document.getElementById('vialsTable').innerHTML = CACHE.vials.map(v=>`
-    <tr>
-      <td>${v.tanggalTerima}</td><td class="mono">${v.noPO}</td>
-      <td>${v.jenisVaksin}</td><td>${v.qtyMasuk}</td>
-      <td class="mono">${vialSisa(v)}</td><td>${v.tanggalExpired||'-'}</td>
-      <td><button class="danger-link" onclick="delRow('vials','${v.id}')">Hapus</button></td>
-    </tr>`).join('') || `<tr><td colspan="7" class="empty">Belum ada vial tercatat</td></tr>`;
-}
+            if (viewingEvent) {
+                return <EventDetail eventId={viewingEvent} onBack={() => setViewingEvent(null)} />;
+            }
 
-function renderVialUsage(){
-  document.getElementById('vialUsageTable').innerHTML = CACHE.vialUsage.map(u=>{
-    const vial = CACHE.vials.find(v=>String(v.id)===String(u.vialId));
-    return `<tr><td class="mono">${vial?vial.jenisVaksin:u.vialId}</td><td>${eventName(u.eventId)}</td>
-      <td>${u.qtyTerpakai}</td><td>${u.tanggalPakai}</td>
-      <td><button class="danger-link" onclick="delRow('vialUsage','${u.id}')">Hapus</button></td></tr>`;
-  }).join('') || `<tr><td colspan="5" class="empty">Belum ada pemakaian tercatat</td></tr>`;
-}
+            return (
+                <div>
+                    <div className="flex-between mb-4">
+                        <h2>Events</h2>
+                        <button className="btn btn-primary" onClick={() => openForm()}><Icons.Plus /> New Event</button>
+                    </div>
 
-function renderEvents(){
-  document.getElementById('eventsTable').innerHTML = CACHE.events.map(e=>`
-    <tr><td>${e.namaEvent}</td><td>${e.tanggal}</td><td>${e.lokasi||'-'}</td>
-    <td>${e.pic||'-'}</td><td>${e.status}</td>
-    <td><button class="danger-link" onclick="delRow('events','${e.id}')">Hapus</button></td></tr>`).join('')
-    || `<tr><td colspan="6" class="empty">Belum ada event</td></tr>`;
-}
+                    <div className="card table-responsive">
+                        <table>
+                            <thead>
+                                <tr><th>Event ID</th><th>Name</th><th>Client</th><th>Date</th><th>Type</th><th>Status</th><th>Actions</th></tr>
+                            </thead>
+                            <tbody>
+                                {events.map(ev => (
+                                    <tr key={ev.id}>
+                                        <td><strong>{ev.id}</strong></td>
+                                        <td>{ev.name}</td>
+                                        <td>{ev.client}</td>
+                                        <td>{formatDate(ev.dateStart)}</td>
+                                        <td style={{textTransform:'capitalize'}}>{ev.type}</td>
+                                        <td><StatusBadge status={ev.status} /></td>
+                                        <td>
+                                            <button className="btn btn-primary btn-sm" onClick={() => setViewingEvent(ev.id)}>Manage</button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
 
-function renderMedical(){
-  document.getElementById('medicalTable').innerHTML = CACHE.medical.map(m=>`
-    <tr><td>${eventName(m.eventId)}</td><td>${m.namaPeserta}</td><td>${m.jenisCheckup||'-'}</td>
-    <td>${m.hasil||'-'}</td><td>${m.tanggal}</td>
-    <td><button class="danger-link" onclick="delRow('medical','${m.id}')">Hapus</button></td></tr>`).join('')
-    || `<tr><td colspan="6" class="empty">Belum ada catatan checkup</td></tr>`;
-}
+                    <Modal title={formData.id ? "Edit Event" : "Create Event"} isOpen={isFormOpen} onClose={() => setIsFormOpen(false)}>
+                        <form onSubmit={handleSaveBasic}>
+                            <div className="form-group">
+                                <label>Event Name</label>
+                                <input required type="text" className="form-control" value={formData.name || ''} onChange={e => setFormData({...formData, name: e.target.value})} />
+                            </div>
+                            <div className="form-row">
+                                <div className="form-group">
+                                    <label>Client</label>
+                                    <input required type="text" className="form-control" value={formData.client || ''} onChange={e => setFormData({...formData, client: e.target.value})} />
+                                </div>
+                                <div className="form-group">
+                                    <label>Type</label>
+                                    <select className="form-control" value={formData.type || ''} onChange={e => setFormData({...formData, type: e.target.value})}>
+                                        <option value="vaksinasi">Vaksinasi</option>
+                                        <option value="mcu">MCU/MMCU</option>
+                                        <option value="wellness">Wellness Day</option>
+                                        <option value="donor">Donor Darah</option>
+                                        <option value="custom">Custom</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div className="form-group">
+                                <label>Location</label>
+                                <input required type="text" className="form-control" value={formData.location || ''} onChange={e => setFormData({...formData, location: e.target.value})} />
+                            </div>
+                            <div className="form-row">
+                                <div className="form-group">
+                                    <label>Date Start</label>
+                                    <input required type="date" className="form-control" value={formData.dateStart || ''} onChange={e => setFormData({...formData, dateStart: e.target.value})} />
+                                </div>
+                                <div className="form-group">
+                                    <label>Date End</label>
+                                    <input type="date" className="form-control" value={formData.dateEnd || ''} onChange={e => setFormData({...formData, dateEnd: e.target.value})} />
+                                </div>
+                            </div>
+                            <div className="form-group">
+                                <label>Status</label>
+                                <select className="form-control" value={formData.status || ''} onChange={e => setFormData({...formData, status: e.target.value})}>
+                                    <option value="draft">Draft</option>
+                                    <option value="confirmed">Confirmed</option>
+                                    <option value="ongoing">Ongoing</option>
+                                    <option value="done">Done</option>
+                                    <option value="cancelled">Cancelled</option>
+                                </select>
+                            </div>
+                            <div className="mt-4" style={{textAlign: 'right'}}>
+                                <button type="button" className="btn btn-secondary" style={{marginRight: '10px'}} onClick={() => setIsFormOpen(false)}>Cancel</button>
+                                <button type="submit" className="btn btn-primary">Save Info</button>
+                            </div>
+                        </form>
+                    </Modal>
+                </div>
+            );
+        };
 
-function renderMerch(){
-  document.getElementById('merchTable').innerHTML = CACHE.merch.map(m=>`
-    <tr><td>${m.namaItem}</td><td>${m.stokMasuk||0}</td><td>${eventName(m.eventId)}</td>
-    <td>${m.qtyTerpakai||0}</td><td>${m.tanggal}</td>
-    <td><button class="danger-link" onclick="delRow('merch','${m.id}')">Hapus</button></td></tr>`).join('')
-    || `<tr><td colspan="6" class="empty">Belum ada merchandise tercatat</td></tr>`;
-}
+        // --- FEATURE: EVENT DETAIL (TABS) ---
+        const EventDetail = ({ eventId, onBack }) => {
+            const { events, saveEvent, vials, updateVial } = useContext(AppContext);
+            const [activeTab, setActiveTab] = useState('info');
+            const event = events.find(e => e.id === eventId);
 
-async function delRow(sheet, id){
-  if(!confirm('Hapus baris ini?')) return;
-  const r = await apiPost(sheet, 'delete', { id });
-  if(r && r.success){ toast('Terhapus'); loadAll(); }
-}
+            if (!event) return <p>Event not found</p>;
 
-// ---------- forms ----------
-function formToObj(form){
-  const obj = {};
-  new FormData(form).forEach((v,k)=>obj[k]=v);
-  return obj;
-}
+            const updateEventField = async (field, data) => {
+                const updatedEvent = { ...event, [field]: data };
+                await saveEvent(updatedEvent);
+            };
 
-document.getElementById('form-vaksin').addEventListener('submit', async e=>{
-  e.preventDefault();
-  const row = formToObj(e.target); row.id = newId();
-  const r = await apiPost('vaksin','add',{row});
-  if(r){ toast('Jenis vaksin disimpan'); e.target.reset(); loadAll(); }
-});
-document.getElementById('form-vial').addEventListener('submit', async e=>{
-  e.preventDefault();
-  const row = formToObj(e.target); row.id = newId();
-  const r = await apiPost('vials','add',{row});
-  if(r){ toast('Vial disimpan'); e.target.reset(); loadAll(); }
-});
-document.getElementById('form-vialusage').addEventListener('submit', async e=>{
-  e.preventDefault();
-  const row = formToObj(e.target); row.id = newId();
-  const r = await apiPost('vialUsage','add',{row});
-  if(r){ toast('Pemakaian dicatat'); e.target.reset(); loadAll(); }
-});
-document.getElementById('form-event').addEventListener('submit', async e=>{
-  e.preventDefault();
-  const row = formToObj(e.target); row.id = newId();
-  const r = await apiPost('events','add',{row});
-  if(r){ toast('Event disimpan'); e.target.reset(); loadAll(); }
-});
-document.getElementById('form-medical').addEventListener('submit', async e=>{
-  e.preventDefault();
-  const row = formToObj(e.target); row.id = newId();
-  const r = await apiPost('medical','add',{row});
-  if(r){ toast('Catatan checkup disimpan'); e.target.reset(); loadAll(); }
-});
-document.getElementById('form-merch').addEventListener('submit', async e=>{
-  e.preventDefault();
-  const row = formToObj(e.target); row.id = newId();
-  const r = await apiPost('merch','add',{row});
-  if(r){ toast('Merchandise disimpan'); e.target.reset(); loadAll(); }
-});
+            return (
+                <div>
+                    <div className="flex-gap mb-4" style={{alignItems:'center'}}>
+                        <button className="btn btn-secondary" onClick={onBack}>← Back</button>
+                        <h2 style={{margin:0}}>{event.name} <StatusBadge status={event.status} /></h2>
+                    </div>
 
-// ---------- init ----------
-const savedKey = localStorage.getItem(KEY_STORAGE);
-if(savedKey){
-  cfg = { url: WEBAPP_URL, key: savedKey };
-  document.getElementById('cfgKey').value = savedKey;
-  overlay.style.display = 'none';
-  loadAll();
-}
-</script>
+                    <div className="card" style={{padding:0}}>
+                        <div className="tabs" style={{padding: '0 20px', background: 'var(--bg-main)'}}>
+                            {['info', 'manpower', 'checklist', 'requirements'].map(tab => (
+                                <button key={tab} className={`tab-btn ${activeTab === tab ? 'active' : ''}`} onClick={() => setActiveTab(tab)}>
+                                    {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                                </button>
+                            ))}
+                        </div>
+                        <div style={{padding: '20px'}}>
+                            {activeTab === 'info' && (
+                                <div className="grid-2">
+                                    <div>
+                                        <p className="text-muted text-sm">Client</p><p className="mb-4"><strong>{event.client}</strong></p>
+                                        <p className="text-muted text-sm">Location</p><p className="mb-4"><strong>{event.location}</strong></p>
+                                        <p className="text-muted text-sm">Type</p><p className="mb-4" style={{textTransform:'capitalize'}}><strong>{event.type}</strong></p>
+                                    </div>
+                                    <div>
+                                        <p className="text-muted text-sm">Start Date</p><p className="mb-4"><strong>{formatDate(event.dateStart)}</strong></p>
+                                        <p className="text-muted text-sm">End Date</p><p className="mb-4"><strong>{formatDate(event.dateEnd)}</strong></p>
+                                    </div>
+                                </div>
+                            )}
+                            
+                            {activeTab === 'manpower' && <ManpowerTab event={event} onUpdate={(data) => updateEventField('manpower', data)} />}
+                            {activeTab === 'checklist' && <ChecklistTab event={event} onUpdate={(data) => updateEventField('checklist', data)} />}
+                            {activeTab === 'requirements' && <RequirementsTab event={event} onUpdate={(data) => updateEventField('requirements', data)} vials={vials} updateVial={updateVial} />}
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const ManpowerTab = ({ event, onUpdate }) => {
+            const list = event.manpower || [];
+            const addPerson = () => onUpdate([...list, { role: 'Dokter', name: '' }]);
+            const updatePerson = (idx, field, val) => {
+                const newList = [...list]; newList[idx][field] = val; onUpdate(newList);
+            };
+            const removePerson = (idx) => { onUpdate(list.filter((_, i) => i !== idx)); };
+
+            return (
+                <div>
+                    <button className="btn btn-secondary btn-sm mb-4" onClick={addPerson}>+ Add Personnel</button>
+                    {list.map((p, idx) => (
+                        <div key={idx} className="flex-gap mb-2">
+                            <select className="form-control" style={{width:'150px'}} value={p.role} onChange={e => updatePerson(idx, 'role', e.target.value)}>
+                                {['Dokter', 'Perawat', 'Regis', 'Runner', 'Helper'].map(r => <option key={r} value={r}>{r}</option>)}
+                            </select>
+                            <input type="text" className="form-control" placeholder="Name" value={p.name} onChange={e => updatePerson(idx, 'name', e.target.value)} />
+                            <button className="btn btn-danger btn-sm" onClick={() => removePerson(idx)}><Icons.Trash/></button>
+                        </div>
+                    ))}
+                    {list.length === 0 && <p className="text-muted">No personnel assigned yet.</p>}
+                </div>
+            );
+        };
+
+        const ChecklistTab = ({ event, onUpdate }) => {
+            const list = event.checklist || [];
+            const addTask = () => onUpdate([...list, { item: '', status: 'pending', pic: '', deadline: '' }]);
+            const updateTask = (idx, field, val) => {
+                const newList = [...list]; newList[idx][field] = val; onUpdate(newList);
+            };
+            const removeTask = (idx) => onUpdate(list.filter((_, i) => i !== idx));
+
+            return (
+                <div>
+                    <button className="btn btn-secondary btn-sm mb-4" onClick={addTask}>+ Add Task</button>
+                    {list.map((t, idx) => (
+                        <div key={idx} className="flex-gap mb-2" style={{alignItems:'center'}}>
+                            <input type="checkbox" checked={t.status === 'done'} onChange={e => updateTask(idx, 'status', e.target.checked ? 'done' : 'pending')} />
+                            <input type="text" className="form-control" style={{flex:2}} placeholder="Task description" value={t.item} onChange={e => updateTask(idx, 'item', e.target.value)} />
+                            <input type="text" className="form-control" style={{flex:1}} placeholder="PIC" value={t.pic} onChange={e => updateTask(idx, 'pic', e.target.value)} />
+                            <input type="date" className="form-control" style={{width:'140px'}} value={t.deadline} onChange={e => updateTask(idx, 'deadline', e.target.value)} />
+                            <button className="btn btn-danger btn-sm" onClick={() => removeTask(idx)}><Icons.Trash/></button>
+                        </div>
+                    ))}
+                    {list.length === 0 && <p className="text-muted">No checklist items yet.</p>}
+                </div>
+            );
+        };
+
+        // --- FEATURE: EVENT REQUIREMENTS & VIAL ALLOCATION ---
+        const RequirementsTab = ({ event, onUpdate, vials, updateVial }) => {
+            const list = event.requirements || [];
+            const [allocatingIndex, setAllocatingIndex] = useState(null); // Which requirement is requesting allocation
+
+            const addReq = () => onUpdate([...list, { item: '', qty: 1, unit: 'pcs', status: 'pending', source: 'stock', vialAllocations: [] }]);
+            const updateReq = (idx, field, val) => {
+                const newList = [...list]; newList[idx][field] = val; onUpdate(newList);
+            };
+            const removeReq = (idx) => onUpdate(list.filter((_, i) => i !== idx));
+
+            // FEFO Logic
+            const inStockVials = vials.filter(v => v.status === 'in stock' && v.dosesRemaining > 0)
+                                      .sort((a, b) => new Date(a.expiredDate) - new Date(b.expiredDate));
+
+            const handleAllocate = async (vialId, dosesToUse) => {
+                const vial = vials.find(v => v.id === vialId);
+                const req = list[allocatingIndex];
+                
+                // 1. Update Vial
+                const remaining = vial.dosesRemaining - dosesToUse;
+                const newStatus = remaining <= 0 ? 'used' : 'in stock';
+                const usageEntry = { eventId: event.id, date: new Date().toISOString(), dosesUsed: dosesToUse, doseRemainingAfter: remaining };
+                
+                await updateVial({
+                    ...vial,
+                    dosesRemaining: remaining,
+                    status: newStatus,
+                    usageHistory: [...vial.usageHistory, usageEntry]
+                });
+
+                // 2. Update Event Requirement
+                const newAllocations = [...(req.vialAllocations || []), { vialId, doses: dosesToUse }];
+                updateReq(allocatingIndex, 'vialAllocations', newAllocations);
+                setAllocatingIndex(null);
+            };
+
+            return (
+                <div>
+                    <button className="btn btn-secondary btn-sm mb-4" onClick={addReq}>+ Add Requirement</button>
+                    <div className="table-responsive">
+                        <table>
+                            <thead><tr><th>Item/Vaccine</th><th>Qty Needed</th><th>Unit</th><th>Source</th><th>Status</th><th>Actions</th></tr></thead>
+                            <tbody>
+                                {list.map((req, idx) => (
+                                    <tr key={idx}>
+                                        <td><input type="text" className="form-control" value={req.item} onChange={e => updateReq(idx, 'item', e.target.value)} placeholder="e.g. Fluarix / Spuit" /></td>
+                                        <td><input type="number" className="form-control" style={{width:'80px'}} value={req.qty} onChange={e => updateReq(idx, 'qty', e.target.value)} /></td>
+                                        <td><input type="text" className="form-control" style={{width:'80px'}} value={req.unit} onChange={e => updateReq(idx, 'unit', e.target.value)} placeholder="vial/pcs" /></td>
+                                        <td>
+                                            <select className="form-control" value={req.source} onChange={e => updateReq(idx, 'source', e.target.value)}>
+                                                <option value="stock">Gudang</option>
+                                                <option value="buy">Beli</option>
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <select className="form-control" value={req.status} onChange={e => updateReq(idx, 'status', e.target.value)}>
+                                                <option value="pending">Pending</option>
+                                                <option value="prepared">Prepared</option>
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <div className="flex-gap">
+                                                {event.type === 'vaksinasi' && (
+                                                    <button className="btn btn-primary btn-sm" onClick={() => setAllocatingIndex(idx)}>Allocate Vial</button>
+                                                )}
+                                                <button className="btn btn-danger btn-sm" onClick={() => removeReq(idx)}><Icons.Trash/></button>
+                                            </div>
+                                            {req.vialAllocations?.length > 0 && (
+                                                <div className="text-sm mt-1" style={{color: 'var(--success)'}}>
+                                                    Allocated: {req.vialAllocations.map(a => `${a.vialId}(${a.doses}d)`).join(', ')}
+                                                </div>
+                                            )}
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                        {list.length === 0 && <p className="text-muted mt-2">No logistics required yet.</p>}
+                    </div>
+
+                    {/* Allocation Modal (FEFO) */}
+                    <Modal title="Allocate Vaccine Vials (FEFO Suggested)" isOpen={allocatingIndex !== null} onClose={() => setAllocatingIndex(null)}>
+                        <p className="mb-2 text-sm text-muted">Vials are sorted by nearest expiry date first.</p>
+                        <div className="table-responsive">
+                            <table>
+                                <thead><tr><th>Vial ID</th><th>Vaccine</th><th>Expiry</th><th>Doses Available</th><th>Action</th></tr></thead>
+                                <tbody>
+                                    {inStockVials.map(v => (
+                                        <tr key={v.id}>
+                                            <td>{v.id}</td>
+                                            <td>{v.vaccineType}</td>
+                                            <td style={{color: getDaysUntil(v.expiredDate) < 30 ? 'var(--danger)' : 'inherit'}}>{formatDate(v.expiredDate)}</td>
+                                            <td>{v.dosesRemaining}</td>
+                                            <td>
+                                                <button className="btn btn-primary btn-sm" onClick={() => {
+                                                    const useStr = prompt(`How many doses to use from ${v.id}? (Max ${v.dosesRemaining})`, "1");
+                                                    const useNum = parseInt(useStr, 10);
+                                                    if (useNum > 0 && useNum <= v.dosesRemaining) handleAllocate(v.id, useNum);
+                                                    else if (useStr !== null) alert('Invalid dose amount');
+                                                }}>Use</button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                    {inStockVials.length === 0 && <tr><td colSpan="5" className="text-center">No vials available in stock.</td></tr>}
+                                </tbody>
+                            </table>
+                        </div>
+                    </Modal>
+                </div>
+            );
+        };
+
+        // --- MAIN APP SHELL ---
+        const App = () => {
+            const [currentRoute, setCurrentRoute] = useState('dashboard');
+            const { loading, exportData } = useContext(AppContext);
+
+            if (loading) return <div style={{padding:'40px', textAlign:'center'}}>Loading System Data...</div>;
+
+            const renderContent = () => {
+                switch(currentRoute) {
+                    case 'dashboard': return <Dashboard />;
+                    case 'events': return <Events />;
+                    case 'pos': return <PurchaseOrders />;
+                    case 'vials': return <Vials />;
+                    default: return <Dashboard />;
+                }
+            };
+
+            const NavItem = ({ id, label, icon: Icon }) => (
+                <li className={`nav-item ${currentRoute === id ? 'active' : ''}`} onClick={() => setCurrentRoute(id)}>
+                    <Icon /> {label}
+                </li>
+            );
+
+            return (
+                <div className="app-container">
+                    <div className="sidebar">
+                        <div className="sidebar-header">MedTrack Pro</div>
+                        <ul className="nav-list">
+                            <NavItem id="dashboard" label="Dashboard" icon={Icons.Dashboard} />
+                            <NavItem id="events" label="Event List" icon={Icons.Event} />
+                            <NavItem id="vials" label="Vial Tracker" icon={Icons.Vial} />
+                            <NavItem id="pos" label="Purchase Orders" icon={Icons.PO} />
+                        </ul>
+                    </div>
+                    
+                    <div className="main-content">
+                        <div className="topbar">
+                            <h3 style={{margin:0, fontWeight:500}}>{currentRoute.charAt(0).toUpperCase() + currentRoute.slice(1)}</h3>
+                            <button className="btn btn-secondary btn-sm" onClick={exportData} title="Backup Data to JSON">
+                                <Icons.Download /> Export Data
+                            </button>
+                        </div>
+                        <div className="content-area">
+                            {renderContent()}
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(
+            <AppProvider>
+                <App />
+            </AppProvider>
+        );
+    </script>
 </body>
 </html>
